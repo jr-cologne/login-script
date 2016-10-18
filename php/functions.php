@@ -2,7 +2,10 @@
 	require_once('config.php');
 
 	// register new user
-	function register($pdo, string $username, string $email, string $password) {
+	function register(string $username, string $email, string $password) {
+		// globalize database connection
+		global $pdo;
+
 		// create reponse array
 		$response = ['succes' => false, 'msg' => null];
 
@@ -29,10 +32,12 @@
 				return $response;
 			}
 
+			// check user data
+			$checkUserData = checkUserData($username, $email);
+
 			// are user data already assigned?
-			$checkUserData = checkUserData($pdo, $username, $email);
 			if ( $checkUserData !== false && is_string($checkUserData) ) {
-				// user data are already assigned, return reponse from function checkUserData()
+				// some user data is already assigned, return reponse from function checkUserData()
 				$response['msg'] = $checkUserData;
 				return $response;
 			} else if (!$checkUserData) {
@@ -45,8 +50,6 @@
 
 			// insert user into database
 			$userRegistered = db_insert(
-															$pdo,
-
 														 [
 														 		'username',
 														 		'email',			// columns in database
@@ -216,7 +219,10 @@
 	}
 
 	// insert data into database
-	function db_insert($pdo, array $columns, array $values) {
+	function db_insert(array $columns, array $values) {
+		// globalize database connection
+		global $pdo;
+
 		// loop through the values that should be inserted and add a colon to the front of it, so that it can be processed for the sql query
 		foreach ($values as $key => $value) {
 			unset($values[$key]);
@@ -249,9 +255,12 @@
 	}
 
 	// check if user data is already assigned
-	function checkUserData($pdo, string $username, string $email) {
+	function checkUserData(string $username, string $email) {
+		// globalize database connection
+		global $pdo;
+
 		// get already assigned user data from database
-		$alreadyAssignedUserData = db_select( $pdo, 'users', [ 'username', 'email' ] );
+		$alreadyAssignedUserData = db_select( 'users', [ 'username', 'email' ] );
 
 		// reorder $alreadyAssignedUserData array to one-dimensional array to make the checks easier
 		foreach ($alreadyAssignedUserData as $key => $row) {
@@ -269,18 +278,23 @@
 				// return response
 				return ERR_HTML_START . 'Username is already assigned. Please choose another one.' . ERR_HTML_END;
 			} else if (in_array($email, $alreadyAssignedUserData)) {	// email is already assigned
-				// retur response
+				// return response
 				return ERR_HTML_START . 'Email is already assigned. Please choose another one.' . ERR_HTML_END;
 			} else {	// nothing is already assigned
 				return true;
 			}
-		} else {	// there is no already assigned user data
+		} else if (empty($alreadyAssignedUserData) && $alreadyAssignedUserData !== false) {	// there is no already assigned user data
+			return true;
+		} else {
 			return false;
 		}
 	}
 
 	// select/get data from database
-	function db_select($pdo, string $table, array $columns, string $where_condition=null, array $where_value=null, $fetch_mode=PDO::FETCH_ASSOC) {
+	function db_select(string $table, array $columns, string $where_condition=null, array $where_value=null, $fetch_mode=PDO::FETCH_ASSOC) {
+		// globalize database connection
+		global $pdo;
+
 		try {
 			// create sql query
 			$sql = "SELECT " . implode(',', $columns) . " FROM $table";
@@ -308,16 +322,22 @@
 		}
 
 		// if statement has been executed succesfully and there are results
-		if ($statement && !empty($results)) {
+		if ($statement === true && !empty($results)) {
 			// return results/data
 			return $results;
+		} else if ($statement === true && empty($results)) {
+			// there are no results
+			return null;
 		} else {
-			// there are no results or the statement hasn't been executed succesfully
+			// an error is occured while executing the statement
 			return false;
 		}
 	}
 
-	function login($pdo, string $username, string $password) {
+	function login(string $username, string $password) {
+		// globalize database connection
+		global $pdo;
+
 		// create reponse array
 		$response = ['succes' => false, 'msg' => null];
 
@@ -343,9 +363,9 @@
 			}
 
 			// does the user exists?
-			if (existsUser($pdo, $username)) {
+			if (existsUser($username)) {
 				// user exists, get hashed password from database
-				$pw_hash = getPasswordHash($pdo, $username)[0]['password'];
+				$pw_hash = getPasswordHash($username)[0]['password'];
 
 				// has the password hash been returned?
 				if (!empty($pw_hash)) {
@@ -376,8 +396,11 @@
 		}
 	}
 
-	function existsUser($pdo, string $username) {
-		$existingUsers = db_select($pdo, 'users', [ 'username' ]);
+	function existsUser(string $username) {
+		// globalize database connection
+		global $pdo;
+
+		$existingUsers = db_select('users', [ 'username' ]);
 
 		// reorder $existingUsers array to one-dimensional array to make the following check easier
 		foreach ($existingUsers as $key => $value) {
@@ -392,15 +415,21 @@
 	}
 
 	// get password hash for user from database
-	function getPasswordHash($pdo, string $username) {
-		$pw_hash = db_select($pdo, 'users', [ 'password' ], 'username = ', [ 'str' => ':username', 'val' => $username ]);
+	function getPasswordHash(string $username) {
+		// globalize database connection
+		global $pdo;
+
+		$pw_hash = db_select('users', [ 'password' ], 'username = ', [ 'str' => ':username', 'val' => $username ]);
 
 		return $pw_hash;
 	}
 
 	// get user id for specific username from database
-	function getUserId($pdo, string $username) {
-		$user_id = db_select($pdo, 'users', [ 'id' ], 'username = ', [ 'str' => ':username', 'val' => $username ]);
+	function getUserId(string $username) {
+		// globalize database connection
+		global $pdo;
+
+		$user_id = db_select('users', [ 'id' ], 'username = ', [ 'str' => ':username', 'val' => $username ]);
 
 		return $user_id;
 	}
