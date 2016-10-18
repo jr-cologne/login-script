@@ -19,7 +19,7 @@
   // login form submitted?
   if ($_POST['login'] == 'Log in') {
     // log in user and get response
-    $response = login($pdo, $_POST['username'], $_POST['password']);
+    $response = login($_POST['username'], $_POST['password']);
 
     // login was succesfully?
     if ($response['succes']) {

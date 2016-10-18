@@ -19,7 +19,7 @@
   // register form submitted?
 	if ($_POST['register'] == 'Register') {
     // register user and get response
-		$response = register($pdo, $_POST['username'], $_POST['email'], $_POST['password']);
+		$response = register($_POST['username'], $_POST['email'], $_POST['password']);
 	}
 ?>
 
