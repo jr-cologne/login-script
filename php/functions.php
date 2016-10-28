@@ -14,7 +14,7 @@
 		$email = clean($email, 'email');
 
 		// define array with the form data
-		$form_data = [ 
+		$form_data = [
 											'username' => $username,
 											'email' => $email,
 											'password' => $password
@@ -53,7 +53,7 @@
 														 [
 														 		'username',
 														 		'email',			// columns in database
-														 		'password'														 
+														 		'password'
 														 ],
 
 														 [
@@ -176,7 +176,7 @@
 				} else {	// username is too short
 					// return response
 					return ERR_HTML_START . 'Your username is too short. Please use at least two characters.' . ERR_HTML_END;
-				}	
+				}
 
 				break;
 
@@ -240,8 +240,6 @@
 			// execute statement
 			$statement = $sql->execute($values);
 		} catch (PDOException $e) {
-			echo '<pre>';
-			print_r($e);
 			// an error is occured while inserting data into the database
 			return false;
 		}
@@ -433,4 +431,4 @@
 
 		return $user_id;
 	}
-?> 
+?>
