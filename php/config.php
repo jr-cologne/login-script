@@ -26,6 +26,7 @@
 	const DB_TYPE = 'mysql';
 	const DB_HOST = 'localhost';
 	const DB_NAME = 'Database';
+	const DB_TABLE = 'Table';
 	const DB_USER = 'User';
 	const DB_PASSWORD = 'Password';
 

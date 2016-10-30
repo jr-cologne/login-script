@@ -258,7 +258,7 @@
 		global $pdo;
 
 		// get already assigned user data from database
-		$alreadyAssignedUserData = db_select( 'users', [ 'username', 'email' ] );
+		$alreadyAssignedUserData = db_select( DB_TABLE, [ 'username', 'email' ] );
 
 		// reorder $alreadyAssignedUserData array to one-dimensional array to make the checks easier
 		foreach ($alreadyAssignedUserData as $key => $row) {
@@ -398,7 +398,7 @@
 		// globalize database connection
 		global $pdo;
 
-		$existingUsers = db_select('users', [ 'username' ]);
+		$existingUsers = db_select(DB_TABLE, [ 'username' ]);
 
 		// reorder $existingUsers array to one-dimensional array to make the following check easier
 		foreach ($existingUsers as $key => $value) {
@@ -417,7 +417,7 @@
 		// globalize database connection
 		global $pdo;
 
-		$pw_hash = db_select('users', [ 'password' ], 'username = ', [ 'str' => ':username', 'val' => $username ]);
+		$pw_hash = db_select(DB_TABLE, [ 'password' ], 'username = ', [ 'str' => ':username', 'val' => $username ]);
 
 		return $pw_hash;
 	}
@@ -427,7 +427,7 @@
 		// globalize database connection
 		global $pdo;
 
-		$user_id = db_select('users', [ 'id' ], 'username = ', [ 'str' => ':username', 'val' => $username ]);
+		$user_id = db_select(DB_TABLE, [ 'id' ], 'username = ', [ 'str' => ':username', 'val' => $username ]);
 
 		return $user_id;
 	}
