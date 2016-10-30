@@ -1,8 +1,15 @@
 <?php
-	session_start();
+  // start session
+  session_start();
 
-	// log out user by unsetting logged_in session
-	unset($_SESSION['logged_in']);
+  // is user logged in? (exists a session?)
+  if (!empty($_SESSION['logged_in'])) {
+    // log out user by unsetting logged_in session
+    unset($_SESSION['logged_in']);
+  } else {
+    // user isn't logged in, redirect user to login page
+    header('Location: login.php');
+  }
 ?>
 
 <!DOCTYPE html>
