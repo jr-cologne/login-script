@@ -6,7 +6,7 @@
 		// globalize database connection
 		global $pdo;
 
-		// create reponse array
+		// create response array
 		$response = ['succes' => false, 'msg' => null];
 
 		// clean username and e-mail
@@ -50,18 +50,20 @@
 
 			// insert user into database
 			$userRegistered = db_insert(
-														 [
-														 		'username',
-														 		'email',			// columns in database
-														 		'password'
-														 ],
+																			DB_TABLE,
 
-														 [
-														 		'username' => $username,
-														 		'email' => $email,				// values that should be inserted
-														 		'password' => $password
-														 ]
-			);
+																		 [
+																		 		'username',
+																		 		'email',			// columns in database
+																		 		'password'
+																		 ],
+
+																		 [
+																		 		'username' => $username,
+																		 		'email' => $email,				// values that should be inserted
+																		 		'password' => $password
+																		 ]
+																 );
 
 			// has user succesfully been registered?
 			if ($userRegistered) {
@@ -219,7 +221,7 @@
 	}
 
 	// insert data into database
-	function db_insert(array $columns, array $values) {
+	function db_insert(string $table, array $columns, array $values) {
 		// globalize database connection
 		global $pdo;
 
@@ -234,7 +236,7 @@
 
 		try {
 			// create sql query
-			$sql = "INSERT INTO users (" . implode(',', $columns) . ") VALUES (" . $values_string .")";
+			$sql = "INSERT INTO $table (" . implode(',', $columns) . ") VALUES (" . $values_string .")";
 			// prepare statement for inserting data into the database
 			$sql = $pdo->prepare($sql);
 			// execute statement
@@ -337,7 +339,7 @@
 		global $pdo;
 
 		// create reponse array
-		$response = ['succes' => false, 'msg' => null];
+		$response = ['succes' => false, 'msg' => null, 'user_id' => null ];
 
 		// clean username
 		$username = clean($username);
@@ -369,8 +371,18 @@
 				if (!empty($pw_hash)) {
 					// password hash has been returned, verify password
 					if (password_verify($password . PEPPER, $pw_hash)) {
-						// password was correct, return response
-						$response = [ 'succes' => true, 'msg' => ERR_HTML_START.  'Your are succesfully logged in. <a href="index.php">Now you can go to the restricted area</a>!' . ERR_HTML_END ];
+						// password was correct, get user id of logged in user
+						$user_id = getUserId($username);
+
+						// check if an user id has been returned
+						if (empty($user_id)) {
+							// no user id has been returned, return response
+							$response['msg'] = ERR_HTML_START . 'Your password was correct, but unfortunately an error occured while trying to log you in.' . ERR_HTML_END;
+							return $response;
+						}
+
+						// return response
+						$response = [ 'succes' => true, 'msg' => ERR_HTML_START .  'Your are succesfully logged in. <a href="index.php">Now you can go to the restricted area</a>!' . ERR_HTML_END, 'user_id' => $user_id ];
 						return $response;
 					} else {	// password is incorrect
 						// return response
@@ -413,11 +425,15 @@
 	}
 
 	// get password hash for user from database
-	function getPasswordHash(string $username) {
+	function getPasswordHash($identifier, string $indentifier_type='username') {
 		// globalize database connection
 		global $pdo;
 
-		$pw_hash = db_select(DB_TABLE, [ 'password' ], 'username = ', [ 'str' => ':username', 'val' => $username ]);
+		if ($indentifier_type == 'username') {
+			$pw_hash = db_select(DB_TABLE, [ 'password' ], 'username = ', [ 'str' => ':username', 'val' => $identifier ]);
+		} else if ($indentifier_type == 'user_id') {
+			$pw_hash = db_select(DB_TABLE, [ 'password' ], 'id = ', [ 'str' => ':id', 'val' => $identifier ]);
+		}
 
 		return $pw_hash;
 	}
@@ -429,6 +445,281 @@
 
 		$user_id = db_select(DB_TABLE, [ 'id' ], 'username = ', [ 'str' => ':username', 'val' => $username ]);
 
+		$user_id = (int) $user_id[0]['id'];
+
 		return $user_id;
+	}
+
+	// is someone logged in?
+	function checkLogin() {
+		if ( isset($_SESSION['logged_in']) && is_int($_SESSION['logged_in']) ) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	// get user data
+	function getUserData(int $user_id, array $wanted_data) {
+		// globalize database connection
+		global $pdo;
+
+		$user_data = db_select(DB_TABLE, $wanted_data, 'id = ', [ 'str' => ':user_id', 'val' => $user_id ] )[0];
+
+		return $user_data;
+	}
+
+	// update profile for a specific user
+	function updateProfile(string $username=null, string $email=null, string $new_username=null, string $new_email=null, string $old_password=null, string $new_password=null) {
+		// globalize database connection
+		global $pdo;
+
+		// create response array
+		$response = ['succes' => false, 'msg' => null];
+
+		// clean username and email
+		$new_username = clean($new_username);
+		$new_email = clean($new_email);
+
+		// define array with the form data
+		$form_data = [
+											'new_username' => $new_username,
+											'new_email' => $new_email,
+											'old_password' => $old_password,
+											'new_password' => $new_password
+								 ];
+
+		// get user id of currently logged in user from session
+		$user_id = $_SESSION['logged_in'];
+
+		// loop through form data and get array of entered fields
+		foreach ($form_data as $key => $value) {
+			if (!empty($value)) {
+				$entered_fields[] = $key;
+			}
+		}
+
+		// at least one field is entered?
+		if (count($entered_fields) >= 1) {
+			// old password empty?
+			if (empty($old_password) && !empty($new_password)) {
+				// old password is empty, return response
+				$response['msg'] = ERR_HTML_START . 'The old password is empty. Please enter it.' . ERR_HTML_END;
+				return $response;
+			} else if (empty($new_password) && !empty($old_password)) {	// new password is empty
+				// return response
+				$response['msg'] = ERR_HTML_START . 'The new password is empty. Please enter it.' . ERR_HTML_END;
+				return $response;
+			}
+
+			// loop through entered fields
+			foreach ($entered_fields as $field) {
+				// which field do we have?
+				switch ($field) {
+					case 'new_username':
+						// is new username the same as before?
+						if ($username == $new_username) {
+							// new username is the same as before, return response
+							$response['msg'] = ERR_HTML_START . 'The username is the same as before. Please choose a new one.' . ERR_HTML_END;
+							return $response;
+						}
+
+						// check new username
+						$checked_new_username = checkSpecificFormData($new_username, 'username');
+
+						// is new username ok?
+						if ($checked_new_username === true) {
+							// new username is ok, add it to array with the data that should be updated
+							$userdata_to_update[] = 'username';
+						} else {
+							// new username isn't ok, return response from checkSpecificFormData()
+							$response['msg'] = $checked_new_username;
+							return $response;
+						}
+
+						break;
+
+					case 'new_email':
+						// is new email the same as before?
+						if ($email == $new_email) {
+							// new email is the same as before, return response
+							$response['msg'] = ERR_HTML_START . 'The email is the same as before. Please choose a new one.' . ERR_HTML_END;
+							return $response;
+						}
+
+						// check new email
+						$checked_new_email = checkSpecificFormData($new_email, 'email');
+
+						// is new email ok?
+						if ($checked_new_email === true) {
+							// new email is ok, add it to array with the data that should be updated
+							$userdata_to_update[] = 'email';
+						} else {
+							// new email isn't ok, return response from checkSpecificFormData()
+							$response['msg'] = $checked_new_email;
+							return $response;
+						}
+
+						break;
+
+					case 'old_password':
+						// get hashed password from database
+						$pw_hash = getPasswordHash($user_id, 'user_id')[0]['password'];
+
+						// has the password hash been returned?
+						if (!empty($pw_hash)) {
+							// password hash has been returned, verify password
+							if (password_verify($old_password . PEPPER, $pw_hash)) {
+								// old password is correct
+								$old_password_correct = true;
+							} else {	// old password is incorrect
+								// return response
+								$response['msg'] = ERR_HTML_START . 'The old password is incorrect. Please try again.' . ERR_HTML_END;
+								return $response;
+							}
+						} else {	// no password hash has been returned
+							// return response
+							$response['msg'] = ERR_HTML_START . 'An error is occured while getting the old password from the database.' . ERR_HTML_END;
+							return $response;
+						}
+
+						break;
+
+					case 'new_password':
+						// check new password
+						$checked_new_password = checkSpecificFormData($new_password, 'password');
+
+						// is new password ok?
+						if ($checked_new_password === true) {
+							// new password is ok, was old password correct?
+							if ($old_password_correct) {
+								// old password was correct, add it to array with the data that should be updated
+								$userdata_to_update[] = 'password';
+							}
+						} else {	// new password isn't ok
+							// return response from checkSpecificFormData()
+							$response['msg'] = $checked_new_password;
+							return $response;
+						}
+
+						break;
+				}
+			}
+
+			// define array that should contain the values of the individual data to be updated
+			$update_values = [];
+
+			// loop through the array with the info which data should be updated
+			foreach ($userdata_to_update as $key => $value) {
+				// check which data type it is and put the related data in the array update_values
+				switch ($value) {
+					case 'username':
+						$update_values[$value] = $new_username;
+						break;
+
+					case 'email':
+						$update_values[$value] = $new_email;
+						break;
+
+					case 'password':
+						// hash password for storing it in database
+						$new_password = password_hash($new_password . PEPPER, PASSWORD_DEFAULT, PW_HASH_OPTIONS);
+
+						$update_values[$value] = $new_password;
+						break;
+				}
+			}
+
+			// update the data in the database
+			$data_updated = db_update(
+																		DB_TABLE,
+
+																		$userdata_to_update,	// columns to update
+
+																		$update_values,	// data to replace the old data
+
+																		'id = ',	// only for a specific user id
+
+																		[ 'str' => ':id', 'val' => $user_id ]
+															 );
+
+			// was updating of the data succesful?
+			if ($data_updated) {
+				// updating was succesful, return response
+				$response = [ 'succes' => true, 'msg' => ERR_HTML_START . 'Your changes have been saved succesfully.' . ERR_HTML_END ];
+				return $response;
+			} else {	// updating wasn't succesful
+				// return response
+				$response['msg'] = ERR_HTML_START . 'An error occured while saving your changes.' . ERR_HTML_END;
+				return $response;
+			}
+		} else {	// all fields are empty
+			// return response
+			$response['msg'] = ERR_HTML_START . 'All fields are empty. Please enter the data you want to change.' . ERR_HTML_END;
+			return $response;
+		}
+
+		return $response;
+	}
+
+	function db_update(string $table, array $columns, array $values, string $where_condition, array $where_value) {
+		// globalize database connection
+		global $pdo;
+
+		// loop through the values that should be the new values and add a colon to the front of it, so that it can be processed for the sql query
+		foreach ($values as $key => $value) {
+			unset($values[$key]);
+			$values[':' . $key] = $value;
+		}
+
+		$update_string = '';
+		$i = 0;
+
+		// only one column to update?
+		if (count($columns) == 1 && count($values) == 1) {
+			// create update string
+			$update_string = $columns[0] . ' = ' . key($values);
+		} else {	// at least two columns to be updated
+			// loop through all columns and values to be updated
+			while (count($columns) > $i && count($values) > $i) {
+				// is it the last column to be updated?
+				if ( count($columns) - 1 == $i ) {
+					// add last chunk to update string
+					$update_string .= $columns[$i] . ' = ' . key($values);
+				} else {	// not the last column
+					// add next chunk to update string
+					$update_string .= $columns[$i] . ' = ' . key($values) . ', ';
+				}
+
+				// got to next value and column
+				next($values);
+				$i++;
+			}
+		}
+
+		// create array with the value of the where condition
+		$where = [ $where_value['str'] => $where_value['val'] ];
+
+		// add array with the where value to the values array
+		$values = array_merge($values, $where);
+
+		try {
+			// create sql query
+			$sql = "UPDATE $table SET $update_string WHERE $where_condition" . $where_value['str'];
+			// prepare statement for inserting data into the database
+			$sql = $pdo->prepare($sql);
+			// execute statement
+			$statement = $sql->execute($values);
+		} catch (PDOException $e) {
+			// an error is occured while inserting data into the database
+			return false;
+		}
+
+		// has statement been executed succesfully?
+		if ($statement) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 ?>

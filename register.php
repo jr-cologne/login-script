@@ -8,7 +8,7 @@
   require_once('php/db.php');
 
   // user logged in?
-  if (!empty($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+  if (checkLogin()) {
     // redirect user to restricted area
     header('Location: index.php');
   }

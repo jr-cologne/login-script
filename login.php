@@ -8,7 +8,7 @@
   require_once('php/db.php');
 
   // user logged in?
-  if (!empty($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+  if (checkLogin()) {
     // redirect user to restricted area
     header('Location: index.php');
   }
@@ -22,9 +22,9 @@
     $response = login($_POST['username'], $_POST['password']);
 
     // login was succesfully?
-    if ($response['succes']) {
+    if ($response['succes'] && is_int($response['user_id'])) {
       // set user as logged in in session
-      $_SESSION['logged_in'] = true;
+      $_SESSION['logged_in'] = $response['user_id'];
     }
   }
 ?>
