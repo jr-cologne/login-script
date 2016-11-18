@@ -2,8 +2,11 @@
   // start session
   session_start();
 
-  // is user logged in? (exists a session?)
-  if (!empty($_SESSION['logged_in'])) {
+  // require functions.php
+  require_once 'php/functions.php';
+
+  // is user logged in?
+  if (checkLogin()) {
     // log out user by unsetting logged_in session
     unset($_SESSION['logged_in']);
   } else {
@@ -27,7 +30,7 @@
 
 	<main>
 		<?php
-			if (empty($_SESSION['logged_in'])) {
+			if (!checkLogin()) {
 				?>
 				<p><strong>You has been logged out succesfully. See you!</strong></p>
 				<?php

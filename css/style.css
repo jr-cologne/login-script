@@ -38,6 +38,15 @@ header h2 {
   font-size: 1.2rem;
 }
 
+#usercp main {
+  padding: 2% 0;
+  justify-content: center;
+}
+
+#usercp main p, #usercp main a {
+  margin-top: 0;
+}
+
 main {
   flex: 1 0 auto;
   display: flex;
@@ -47,7 +56,7 @@ main {
 
 main a {
   text-decoration: none;
-  border-bottom: 0 solid transparent;
+  border-bottom: 0.085em solid transparent;
   transition: border-bottom .3s linear;
 }
 
@@ -55,7 +64,7 @@ main a:hover {
   border-bottom: 0.085em solid #0000EE;
 }
 
-main p {
+main p, main a {
   margin: 2% 0;
 }
 
@@ -107,6 +116,30 @@ main form input[type="submit"] {
   letter-spacing: 0.05em;
   transition: transform .3s ease-in-out;
   cursor: pointer;
+}
+
+main #user_info {
+  background-color: #eee;
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1% 0;
+}
+
+main #user_info ul {
+  width: 95%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1% 0;
+}
+
+main #user_info li {
+  list-style-position: inside;
+  width: 90%;
+  padding: 0.5% 0;
+  margin: 1% 0;
 }
 
 footer {
@@ -205,6 +238,9 @@ footer #github-icon {
   header h2 {
     margin-top: 1.5%;
   }
+  #usercp main {
+    padding: 4% 0;
+  }
   main p {
     margin: 4.5%;
   }
@@ -231,10 +267,19 @@ footer #github-icon {
 }
 
 @media only screen and (max-width: 515px) {
+  #usercp main {
+    padding: 6% 0;
+  }
   main form .field_wrap {
     flex-direction: column;
   }
   main form label, main form input {
     width: 100%;
+  }
+}
+
+@media only screen and (max-width: 420px) {
+  main form input[type="submit"] {
+    width: 65%;
   }
 }
