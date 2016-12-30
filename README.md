@@ -10,8 +10,7 @@ You want to see the project in action? Visit the demo site here: http://jr-colog
 
 You can create your own account or just login with the demo account. These are the credentials:
 
-Username: Test
-Password: password
+Username: Test, Password: password
 
 Please do not change them!
 
