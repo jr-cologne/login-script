@@ -14,7 +14,7 @@ Username: Test, Password: password
 
 Please do not change them!
 
-If you want to do that kind of stuff, create your own account. With that you can do what you want as long as you don't touch anything else then your own account.
+If you want to do that kind of stuff, create your own account. With that you can do what you want as long as you don't touch anything else than your own account.
 
 ## Installation
 
@@ -27,7 +27,7 @@ If you want to run the login script on your local machine or your own server, do
 5. Open the file *php/config.php* in your editor and change the login settings for your database connection. Also you can make some changes to the other settings, if you want to.
 6. Now you should be ready to start!
 
-If you have any trouble installing the login script, find a bug or have a question, open up a Issue and I will try to help you.
+If you have any trouble installing the login script, you found a bug or you have got a question, open up a Issue and I will try to help you.
 
 ## Contributions
 
