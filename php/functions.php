@@ -722,4 +722,81 @@
 			return false;
 		}
 	}
+
+	// delete account of specific user
+	function deleteAccount(int $user_id, string $password) {
+		// globalize database connection
+		global $pdo;
+
+		// create response array
+		$response = ['success' => false, 'msg' => null];
+
+		// password not entered?
+		if (empty($password)) {
+			$response['msg'] = ERR_HTML_START . 'Password is empty. Please enter it.' . ERR_HTML_END;
+			return $response;
+		}
+
+		// check if password is correct
+		// get hashed password from database
+		$pw_hash = getPasswordHash($user_id, 'user_id')[0]['password'];
+
+		// has the password hash been returned?
+		if (!empty($pw_hash)) {
+			// password hash has been returned, verify password
+			if (password_verify($password . PEPPER, $pw_hash)) {
+				// password is correct, delete account
+				$deleted = db_delete(DB_TABLE, "id = :user_id", [ 'user_id' => $user_id ]);
+
+				// deleted account successfully?
+				if ($deleted) {
+					// destroy session/log out user
+					unset($_SESSION['logged_in']);
+
+					// return response
+					$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'Your account has been deleted successfully. <a href="index.php">Back to homepage</a>' . ERR_HTML_END ];
+					return $response;
+				} else {
+					// return response
+					$response['msg'] = ERR_HTML_START . 'Something went wrong deleting your account. Please try again.' . ERR_HTML_END;
+					return $response;
+				}
+			} else {	// password is incorrect
+				// return response
+				$response['msg'] = ERR_HTML_START . 'The password is incorrect. Please try again.' . ERR_HTML_END;
+				return $response;
+			}
+		} else {	// no password hash has been returned
+			// return response
+			$response['msg'] = ERR_HTML_START . 'An error is occured while getting the password from the database.' . ERR_HTML_END;
+			return $response;
+		}
+	}
+
+	// delete rows from database
+  function db_delete(string $table, string $where_condition, array $values) {
+    // globalize database connection
+    global $pdo;
+
+    try {
+      // create sql query
+      $sql = "DELETE FROM `$table` WHERE $where_condition";
+
+      // prepare statement for selecting data from the database
+      $sql = $pdo->prepare($sql);
+
+      // execute statement
+      $statement = $sql->execute($values);
+    } catch (PDOException $e) {
+      // an error is occured while deleting data from the database
+      return false;
+    }
+
+    // has statement been executed successfully?
+    if ($statement) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 ?>

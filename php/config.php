@@ -7,7 +7,7 @@
   // activate php error logging
   ini_set('log_errors', 'On');
   // log php errors there
-  ini_set('error_log', '../php-errors.log');
+  ini_set('error_log', '../login-script-php-errors.log');
 
 	/***** Settings for checkForm() function *****/
 	// defines the html code that is concatenated with the error message, which the function returns

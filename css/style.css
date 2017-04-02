@@ -43,10 +43,6 @@ header h2 {
   justify-content: center;
 }
 
-#usercp main p, #usercp main a {
-  margin-top: 0;
-}
-
 main {
   flex: 1 0 auto;
   display: flex;

@@ -34,7 +34,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Restricted Area</title>
+  <title>Restricted Area - User Control Panel</title>
   <!-- Include Head -->
   <?php require_once 'includes/sections/head.html'; ?>
 </head>
@@ -52,7 +52,7 @@
       }
     ?>
 
-    <a href="index.php">Back to the start page</a>
+    <a href="index.php">Back to the homepage</a>
 
     <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
       <div class="field_wrap">
@@ -73,6 +73,8 @@
       </div>
       <input type="submit" name="update_profile" value="Save changes">
     </form>
+
+    <a href="delete_account.php">Delete Account</a>
   </main>
 
   <!-- Include Footer -->
