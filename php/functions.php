@@ -4,10 +4,10 @@
 	// register new user
 	function register(string $username, string $email, string $password) {
 		// globalize database connection
-		global $pdo;
+		global $db;
 
 		// create response array
-		$response = ['succes' => false, 'msg' => null];
+		$response = ['success' => false, 'msg' => null];
 
 		// clean username and e-mail
 		$username = clean($username);
@@ -26,7 +26,7 @@
 		// is form data ok?
 		if ($checkForm === true) {
 			// check connection with database
-			if (!$pdo) {
+			if (!$db->connected()) {
 				// connection to database failed, return reponse
 				$response['msg'] = ERR_HTML_START . 'Connection to database failed!' . ERR_HTML_END;
 				return $response;
@@ -35,7 +35,7 @@
 			// check user data
 			$checkUserData = checkUserData($username, $email);
 
-			// are user data already assigned?
+			// is user data already assigned?
 			if ( $checkUserData !== false && is_string($checkUserData) ) {
 				// some user data is already assigned, return reponse from function checkUserData()
 				$response['msg'] = $checkUserData;
@@ -49,29 +49,22 @@
 			$password = password_hash($password . PEPPER, PASSWORD_DEFAULT, PW_HASH_OPTIONS);
 
 			// insert user into database
-			$userRegistered = db_insert(
-																			DB_TABLE,
+			$userRegistered = $db->insert(
+				"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`) VALUES (:username, :email, :password)",
+				[
+				 	'username' => $username,
+				 	'email' => $email,
+				 	'password' => $password
+				]
+			);
 
-																		 [
-																		 		'username',
-																		 		'email',			// columns in database
-																		 		'password'
-																		 ],
-
-																		 [
-																		 		'username' => $username,
-																		 		'email' => $email,				// values that should be inserted
-																		 		'password' => $password
-																		 ]
-																 );
-
-			// has user succesfully been registered?
-			if ($userRegistered) {
+			// has user successfully been registered?
+			if ($userRegistered === true) {
 				if (empty($error)) {
-					$response = [ 'succes' => true, 'msg' => ERR_HTML_START . 'You have been registered succesfully!' . ERR_HTML_END ];
+					$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You have been registered successfully!' . ERR_HTML_END ];
 					return $response;
 				} else {
-					$response = [ 'succes' => true, 'msg' => $error . ERR_HTML_START . 'You have been registered succesfully!' . ERR_HTML_END ];
+					$response = [ 'success' => true, 'msg' => $error . ERR_HTML_START . 'You have been registered successfully!' . ERR_HTML_END ];
 					return $response;
 				}
 			} else {	// registration failed
@@ -99,7 +92,7 @@
 
 		// shall an email be cleaned?
 		if ($type == 'email') {
-			// in case of a email injection, just take the first email
+			// in case of an email injection, just take the first email
 			$data = explode(',', $data);
 			$data = $data[0];
 		}
@@ -220,56 +213,22 @@
 		}
 	}
 
-	// insert data into database
-	function db_insert(string $table, array $columns, array $values) {
-		// globalize database connection
-		global $pdo;
-
-		// loop through the values that should be inserted and add a colon to the front of it, so that it can be processed for the sql query
-		foreach ($values as $key => $value) {
-			unset($values[$key]);
-			$values[':' . $key] = $value;
-		}
-
-		// create a string of all values that should be inserted to use it for the sql query
-		$values_string = "'" . implode("','", $values) . "'";
-
-		try {
-			// create sql query
-			$sql = "INSERT INTO $table (" . implode(',', $columns) . ") VALUES (" . $values_string .")";
-			// prepare statement for inserting data into the database
-			$sql = $pdo->prepare($sql);
-			// execute statement
-			$statement = $sql->execute($values);
-		} catch (PDOException $e) {
-			// an error is occured while inserting data into the database
-			return false;
-		}
-
-		// has statement been executed succesfully?
-		if ($statement) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	// check if user data is already assigned
 	function checkUserData(string $username, string $email) {
 		// globalize database connection
-		global $pdo;
+		global $db;
 
 		// get already assigned user data from database
-		$alreadyAssignedUserData = db_select( DB_TABLE, [ 'username', 'email' ] );
+		$alreadyAssignedUserData = $db->select("SELECT `username`, `email` FROM `" . DB_TABLE . "`");
 
-		// reorder $alreadyAssignedUserData array to one-dimensional array to make the checks easier
-		foreach ($alreadyAssignedUserData as $key => $row) {
-			$alreadyAssignedUserData[] = strtolower($row['username']);
-			$alreadyAssignedUserData[] = strtolower($row['email']);
-		}
+		// check if there is already assigned user data
+		if ( !empty($alreadyAssignedUserData) && $alreadyAssignedUserData !== false && !$db->error() ) {
+			// reorder $alreadyAssignedUserData array to one-dimensional array to make the checks easier
+			foreach ($alreadyAssignedUserData as $key => $row) {
+				$alreadyAssignedUserData[] = strtolower($row['username']);
+				$alreadyAssignedUserData[] = strtolower($row['email']);
+			}
 
-		// if there is already assigned user data
-		if ( !empty($alreadyAssignedUserData) && $alreadyAssignedUserData !== false ) {
 			// are username and email already assigned?
 			if ( in_array(strtolower($username), $alreadyAssignedUserData) && in_array(strtolower($email), $alreadyAssignedUserData) ) {
 				// return response
@@ -283,72 +242,28 @@
 			} else {	// nothing is already assigned
 				return true;
 			}
-		} else if (empty($alreadyAssignedUserData) && $alreadyAssignedUserData !== false) {	// there is no already assigned user data
+		} else if ( empty($alreadyAssignedUserData) && $alreadyAssignedUserData !== false && !$db->error() ) {	// there is no already assigned user data
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	// select/get data from database
-	function db_select(string $table, array $columns, string $where_condition=null, array $where_value=null, $fetch_mode=PDO::FETCH_ASSOC) {
-		// globalize database connection
-		global $pdo;
-
-		try {
-			// create sql query
-			$sql = "SELECT " . implode(',', $columns) . " FROM $table";
-
-			if (!empty($where_condition) && !empty($where_value['str'])) {
-				$sql .= " WHERE $where_condition " . $where_value['str'];
-			}
-
-			// prepare statement for selecting data from the database
-			$sql = $pdo->prepare($sql);
-
-			if (!empty($where_condition) && !empty($where_value)) {
-				// execute statement
-				$statement = $sql->execute( [ $where_value['str'] => $where_value['val'] ] );
-			} else {
-				// execute statement
-				$statement = $sql->execute();
-			}
-
-			// fetch all data from database
-			$results = $sql->fetchAll($fetch_mode);
-		} catch (PDOException $e) {
-			// an error is occured while selecting data from the database
-			return false;
-		}
-
-		// if statement has been executed succesfully and there are results
-		if ($statement === true && !empty($results)) {
-			// return results/data
-			return $results;
-		} else if ($statement === true && empty($results)) {
-			// there are no results
-			return null;
-		} else {
-			// an error is occured while executing the statement
-			return false;
-		}
-	}
-
 	function login(string $username, string $password) {
 		// globalize database connection
-		global $pdo;
+		global $db;
 
-		// create reponse array
-		$response = ['succes' => false, 'msg' => null, 'user_id' => null ];
+		// create response array
+		$response = ['success' => false, 'msg' => null, 'user_id' => null ];
 
 		// clean username
 		$username = clean($username);
 
 		// define array with the form data
 		$form_data = [
-											'username' => $username,
-											'password' => $password
-								 ];
+			'username' => $username,
+			'password' => $password
+		];
 
 		// check form data
 		$checkForm = checkForm($form_data, 'login');
@@ -356,16 +271,22 @@
 		// is form data ok?
 		if ($checkForm === true) {
 			// check connection with database
-			if (!$pdo) {
+			if (!$db->connected()) {
 				// connection to database failed, return reponse
 				$response['msg'] = ERR_HTML_START . 'Connection to database failed!' . ERR_HTML_END;
 				return $response;
 			}
 
-			// does the user exists?
-			if (existsUser($username)) {
+			$existsUser = existsUser($username);
+			if ($existsUser === false) {
+				$response['msg'] = ERR_HTML_START . 'An error occured when trying to check if the user exists. Please try again.' . ERR_HTML_END;
+				return $response;
+			}
+
+			// does the user exist?
+			if ($existsUser) {
 				// user exists, get hashed password from database
-				$pw_hash = getPasswordHash($username)[0]['password'];
+				$pw_hash = getPasswordHash($username);
 
 				// has the password hash been returned?
 				if (!empty($pw_hash)) {
@@ -382,7 +303,7 @@
 						}
 
 						// return response
-						$response = [ 'succes' => true, 'msg' => ERR_HTML_START .  'Your are succesfully logged in. <a href="index.php">Now you can go to the restricted area</a>!' . ERR_HTML_END, 'user_id' => $user_id ];
+						$response = [ 'success' => true, 'msg' => ERR_HTML_START .  'Your are successfully logged in. <a href="index.php">Now you can go to the restricted area</a>!' . ERR_HTML_END, 'user_id' => $user_id ];
 						return $response;
 					} else {	// password is incorrect
 						// return response
@@ -408,9 +329,14 @@
 
 	function existsUser(string $username) {
 		// globalize database connection
-		global $pdo;
+		global $db;
 
-		$existingUsers = db_select(DB_TABLE, [ 'username' ]);
+		$existingUsers = $db->select("SELECT `username` FROM `" . DB_TABLE . "`");
+
+		// is an error occured when getting list of existing users?
+		if ($db->error()) {
+			return false;
+		}
 
 		// reorder $existingUsers array to one-dimensional array to make the following check easier
 		foreach ($existingUsers as $key => $value) {
@@ -420,34 +346,34 @@
 		if (in_array($username, $existingUsers)) {
 			return true;
 		} else {
-			return false;
+			return 0;
 		}
 	}
 
 	// get password hash for user from database
 	function getPasswordHash($identifier, string $indentifier_type='username') {
 		// globalize database connection
-		global $pdo;
+		global $db;
 
 		if ($indentifier_type == 'username') {
-			$pw_hash = db_select(DB_TABLE, [ 'password' ], 'username = ', [ 'str' => ':username', 'val' => $identifier ]);
+			$pw_hash = $db->select("SELECT `password` FROM `" . DB_TABLE . "` WHERE `username` = :username", [ 'username' => $identifier ]);
 		} else if ($indentifier_type == 'user_id') {
-			$pw_hash = db_select(DB_TABLE, [ 'password' ], 'id = ', [ 'str' => ':id', 'val' => $identifier ]);
+			$pw_hash = $db->select("SELECT `password` FROM `" . DB_TABLE . "` WHERE `id` = :user_id", [ 'user_id' => $identifier ]);
 		}
 
-		return $pw_hash;
+		if ( !empty($pw_hash) && $pw_hash !== false && !$db->error() ) {
+			return $pw_hash[0]['password'];
+		}
+
+		return false;
 	}
 
 	// get user id for specific username from database
 	function getUserId(string $username) {
 		// globalize database connection
-		global $pdo;
+		global $db;
 
-		$user_id = db_select(DB_TABLE, [ 'id' ], 'username = ', [ 'str' => ':username', 'val' => $username ]);
-
-		$user_id = (int) $user_id[0]['id'];
-
-		return $user_id;
+		return (int) $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `username` = :username", [ 'username' => $username ])[0]['id'];
 	}
 
 	// is someone logged in?
@@ -462,20 +388,20 @@
 	// get user data
 	function getUserData(int $user_id, array $wanted_data) {
 		// globalize database connection
-		global $pdo;
+		global $db;
 
-		$user_data = db_select(DB_TABLE, $wanted_data, 'id = ', [ 'str' => ':user_id', 'val' => $user_id ] )[0];
+		$fields = '`' . implode('`, `', $wanted_data) . '`';
 
-		return $user_data;
+		return $db->select("SELECT " . $fields . " FROM `" . DB_TABLE . "` WHERE `id` = :user_id", [ 'user_id' => $user_id ])[0];
 	}
 
 	// update profile for a specific user
 	function updateProfile(string $username=null, string $email=null, string $new_username=null, string $new_email=null, string $old_password=null, string $new_password=null) {
 		// globalize database connection
-		global $pdo;
+		global $db;
 
 		// create response array
-		$response = ['succes' => false, 'msg' => null];
+		$response = ['success' => false, 'msg' => null];
 
 		// clean username and email
 		$new_username = clean($new_username);
@@ -564,7 +490,7 @@
 
 					case 'old_password':
 						// get hashed password from database
-						$pw_hash = getPasswordHash($user_id, 'user_id')[0]['password'];
+						$pw_hash = getPasswordHash($user_id, 'user_id');
 
 						// has the password hash been returned?
 						if (!empty($pw_hash)) {
@@ -630,25 +556,26 @@
 				}
 			}
 
+			foreach ($userdata_to_update as $value) {
+				$set .= '`' . $value . '` = :' . $value;
+
+				if ( !empty(next($userdata_to_update)) ) {
+					$set .= ', ';
+				}
+			}
+
 			// update the data in the database
-			$data_updated = db_update(
-																		DB_TABLE,
+			$data_updated = $db->update(
+				"UPDATE `" . DB_TABLE . "` SET " . $set . " WHERE `id` = :user_id",
+				array_merge($update_values, [ 'user_id' => $user_id ])
+			);
 
-																		$userdata_to_update,	// columns to update
-
-																		$update_values,	// data to replace the old data
-
-																		'id = ',	// only for a specific user id
-
-																		[ 'str' => ':id', 'val' => $user_id ]
-															 );
-
-			// was updating of the data succesful?
-			if ($data_updated) {
-				// updating was succesful, return response
-				$response = [ 'succes' => true, 'msg' => ERR_HTML_START . 'Your changes have been saved succesfully.' . ERR_HTML_END ];
+			// was updating of the data successful?
+			if ($data_updated === true) {
+				// updating was successful, return response
+				$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'Your changes have been saved successfully.' . ERR_HTML_END ];
 				return $response;
-			} else {	// updating wasn't succesful
+			} else {	// updating wasn't successful
 				// return response
 				$response['msg'] = ERR_HTML_START . 'An error occured while saving your changes.' . ERR_HTML_END;
 				return $response;
@@ -662,74 +589,13 @@
 		return $response;
 	}
 
-	function db_update(string $table, array $columns, array $values, string $where_condition, array $where_value) {
-		// globalize database connection
-		global $pdo;
-
-		// loop through the values that should be the new values and add a colon to the front of it, so that it can be processed for the sql query
-		foreach ($values as $key => $value) {
-			unset($values[$key]);
-			$values[':' . $key] = $value;
-		}
-
-		$update_string = '';
-		$i = 0;
-
-		// only one column to update?
-		if (count($columns) == 1 && count($values) == 1) {
-			// create update string
-			$update_string = $columns[0] . ' = ' . key($values);
-		} else {	// at least two columns to be updated
-			// loop through all columns and values to be updated
-			while (count($columns) > $i && count($values) > $i) {
-				// is it the last column to be updated?
-				if ( count($columns) - 1 == $i ) {
-					// add last chunk to update string
-					$update_string .= $columns[$i] . ' = ' . key($values);
-				} else {	// not the last column
-					// add next chunk to update string
-					$update_string .= $columns[$i] . ' = ' . key($values) . ', ';
-				}
-
-				// got to next value and column
-				next($values);
-				$i++;
-			}
-		}
-
-		// create array with the value of the where condition
-		$where = [ $where_value['str'] => $where_value['val'] ];
-
-		// add array with the where value to the values array
-		$values = array_merge($values, $where);
-
-		try {
-			// create sql query
-			$sql = "UPDATE $table SET $update_string WHERE $where_condition" . $where_value['str'];
-			// prepare statement for inserting data into the database
-			$sql = $pdo->prepare($sql);
-			// execute statement
-			$statement = $sql->execute($values);
-		} catch (PDOException $e) {
-			// an error is occured while inserting data into the database
-			return false;
-		}
-
-		// has statement been executed succesfully?
-		if ($statement) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	// delete account of specific user
 	function deleteAccount(int $user_id, string $password) {
 		// globalize database connection
-		global $pdo;
+		global $db;
 
 		// create response array
-		$response = ['success' => false, 'msg' => null];
+		$response = ['successs' => false, 'msg' => null];
 
 		// password not entered?
 		if (empty($password)) {
@@ -739,22 +605,22 @@
 
 		// check if password is correct
 		// get hashed password from database
-		$pw_hash = getPasswordHash($user_id, 'user_id')[0]['password'];
+		$pw_hash = getPasswordHash($user_id, 'user_id');
 
 		// has the password hash been returned?
 		if (!empty($pw_hash)) {
 			// password hash has been returned, verify password
 			if (password_verify($password . PEPPER, $pw_hash)) {
 				// password is correct, delete account
-				$deleted = db_delete(DB_TABLE, "id = :user_id", [ 'user_id' => $user_id ]);
+				$deleted = $db->delete("DELETE FROM `" . DB_TABLE . "` WHERE `id` = :user_id", [ 'user_id' => $user_id ]);
 
-				// deleted account successfully?
-				if ($deleted) {
+				// deleted account successsfully?
+				if ($deleted === true) {
 					// destroy session/log out user
 					unset($_SESSION['logged_in']);
 
 					// return response
-					$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'Your account has been deleted successfully. <a href="index.php">Back to homepage</a>' . ERR_HTML_END ];
+					$response = [ 'successs' => true, 'msg' => ERR_HTML_START . 'Your account has been deleted successsfully. <a href="index.php">Back to homepage</a>' . ERR_HTML_END ];
 					return $response;
 				} else {
 					// return response
@@ -772,31 +638,4 @@
 			return $response;
 		}
 	}
-
-	// delete rows from database
-  function db_delete(string $table, string $where_condition, array $values) {
-    // globalize database connection
-    global $pdo;
-
-    try {
-      // create sql query
-      $sql = "DELETE FROM `$table` WHERE $where_condition";
-
-      // prepare statement for selecting data from the database
-      $sql = $pdo->prepare($sql);
-
-      // execute statement
-      $statement = $sql->execute($values);
-    } catch (PDOException $e) {
-      // an error is occured while deleting data from the database
-      return false;
-    }
-
-    // has statement been executed successfully?
-    if ($statement) {
-      return true;
-    } else {
-      return false;
-    }
-  }
 ?>

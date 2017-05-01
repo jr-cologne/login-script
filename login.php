@@ -21,8 +21,8 @@
     // log in user and get response
     $response = login($_POST['username'], $_POST['password']);
 
-    // login was succesfully?
-    if ($response['succes'] && is_int($response['user_id'])) {
+    // login was successfully?
+    if ($response['success'] && is_int($response['user_id'])) {
       // set user as logged in in session
       $_SESSION['logged_in'] = $response['user_id'];
     }
@@ -45,7 +45,7 @@
   <main>
     <?php
       // display that only if the login failed or if the login form wasn't submitted
-      if (!$response['succes']) {
+      if (!$response['success']) {
         ?>
         <p>Please log in to get into the restricted area!</p>
         <?php
@@ -57,7 +57,7 @@
       }
 
       // display login form etc. if the login failed
-      if (!$response['succes']) {
+      if (!$response['success']) {
         ?>
         <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
           <div class="field_wrap">

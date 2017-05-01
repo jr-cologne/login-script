@@ -39,7 +39,7 @@
   <main>
     <?php
       // display that only if the registration failed or if the registration form wasn't submitted
-      if (!$response['succes']) {
+      if (!$response['success']) {
         ?>
         <p>Register for getting access to the restricted area!</p>
         <?php
@@ -50,8 +50,8 @@
         echo $response['msg'];
       }
 
-      // was the registration succesfully?
-      if ($response['succes']) {
+      // was the registration successfully?
+      if ($response['success']) {
         // display additional response
         echo ERR_HTML_START . 'Now go ahead and <a href="login.php">log in</a> to your account. Have fun!' . ERR_HTML_END;
       } else {  // registration failed
