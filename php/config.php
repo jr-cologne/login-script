@@ -25,10 +25,10 @@
 	// Login Settings
 	const DB_TYPE = 'mysql';
 	const DB_HOST = 'localhost';
-	const DB_NAME = 'Database';
-	const DB_TABLE = 'Table';
-	const DB_USER = 'User';
-	const DB_PASSWORD = 'Password';
+	const DB_NAME = 'login-script';
+	const DB_TABLE = 'users';
+	const DB_USER = 'root';
+	const DB_PASSWORD = '';
 
 	// define error mode
 	const PDO_ERROR_MODE = PDO::ERRMODE_EXCEPTION;

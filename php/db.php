@@ -1,10 +1,6 @@
 <?php
 	require_once('config.php');
+  require_once('includes/db-class/DB.php');
 
-	try {
-		$pdo = new PDO(DB_TYPE . ':host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USER, DB_PASSWORD);
-		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO_ERROR_MODE);
-	} catch (PDOException $e) {
-		$pdo = false;
-	}
+	$db = new DB(DB_NAME, DB_USER, DB_PASSWORD, DB_TYPE, DB_HOST, PDO_ERROR_MODE);
 ?>

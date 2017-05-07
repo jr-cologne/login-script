@@ -32,7 +32,7 @@
 		<?php
 			if (!checkLogin()) {
 				?>
-				<p><strong>You has been logged out succesfully. See you!</strong></p>
+				<p><strong>You has been logged out successfully. See you!</strong></p>
 				<?php
 			} else {
 				?>
