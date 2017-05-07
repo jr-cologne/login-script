@@ -1,0 +1,3 @@
+[submodule "includes/db-class"]
+	path = includes/db-class
+	url = git@github.com:jr-cologne/db-class.git
