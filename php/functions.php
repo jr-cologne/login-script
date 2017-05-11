@@ -15,10 +15,10 @@
 
 		// define array with the form data
 		$form_data = [
-											'username' => $username,
-											'email' => $email,
-											'password' => $password
-								 ];
+			'username' => $username,
+			'email' => $email,
+			'password' => $password
+		];
 
 		// check form data
 		$checkForm = checkForm($form_data);
@@ -48,24 +48,42 @@
 			// hash password for storing it in database
 			$password = password_hash($password . PEPPER, PASSWORD_DEFAULT, PW_HASH_OPTIONS);
 
+			// create token for email verification
+			$token = bin2hex(random_bytes(16));
+
 			// insert user into database
 			$userRegistered = $db->insert(
-				"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`) VALUES (:username, :email, :password)",
+				"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`, `token`) VALUES (:username, :email, :password, :token)",
 				[
 				 	'username' => $username,
 				 	'email' => $email,
-				 	'password' => $password
+				 	'password' => $password,
+				 	'token' => $token
 				]
 			);
 
 			// has user successfully been registered?
 			if ($userRegistered === true) {
-				if (empty($error)) {
-					$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You have been registered successfully!' . ERR_HTML_END ];
-					return $response;
+				// send email for verification
+				$verification_mail = sendVerificationMail($username, $email, $token);
+
+				// verification mail sent successfully?
+				if ($verification_mail) {
+					if (empty($error)) {
+						$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You have been registered successfully and a mail to verify your email address has been sent to your inbox!' . ERR_HTML_END ];
+						return $response;
+					} else {
+						$response = [ 'success' => true, 'msg' => $error . ERR_HTML_START . 'You have been registered successfully and a mail to verify your email address has been sent to your inbox!' . ERR_HTML_END ];
+						return $response;
+					}
 				} else {
-					$response = [ 'success' => true, 'msg' => $error . ERR_HTML_START . 'You have been registered successfully!' . ERR_HTML_END ];
-					return $response;
+					if (empty($error)) {
+						$response = [ 'success' => false, 'msg' => ERR_HTML_START . 'You have been registered successfully, but unfortunately an error occured when trying to send an email to your inbox in order to verify your email address! Please try again and <a href="verify-email.php?resend=true&id=' . getUserId($username) . '">order a new verification mail</a>.' . ERR_HTML_END ];
+						return $response;
+					} else {
+						$response = [ 'success' => false, 'msg' => $error . ERR_HTML_START . 'You have been registered successfully, but unfortunately an error occured when trying to send an email to your inbox in order to verify your email address! Please <a href="verify-email.php?resend=true&id=' . getUserId($user_id) . '">go to this page to get help</a>.' . ERR_HTML_END ];
+						return $response;
+					}
 				}
 			} else {	// registration failed
 				// are there any additional errors?
@@ -285,6 +303,17 @@
 
 			// does the user exist?
 			if ($existsUser) {
+				// get user id
+				$user_id = getUserId($username);
+
+				// email verified?
+				$email_verified = (bool) $db->select("SELECT `verified` FROM " . DB_TABLE . " WHERE `id` = :user_id", [ 'user_id' => $user_id ])[0]['verified'];
+
+				if (!$email_verified || $db->error()) {
+					$response['msg'] = ERR_HTML_START . 'Your email is not verified or an error connected to that occured. Please make sure that your email is verified. In case you lost the verification mail, you can <a href="verify-email.php?resend=true&id=' . $user_id . '">order a new one</a>.' . ERR_HTML_END;
+					return $response;
+				}
+
 				// user exists, get hashed password from database
 				$pw_hash = getPasswordHash($username);
 
@@ -351,13 +380,13 @@
 	}
 
 	// get password hash for user from database
-	function getPasswordHash($identifier, string $indentifier_type='username') {
+	function getPasswordHash($identifier, string $identifier_type='username') {
 		// globalize database connection
 		global $db;
 
-		if ($indentifier_type == 'username') {
+		if ($identifier_type == 'username') {
 			$pw_hash = $db->select("SELECT `password` FROM `" . DB_TABLE . "` WHERE `username` = :username", [ 'username' => $identifier ]);
-		} else if ($indentifier_type == 'user_id') {
+		} else if ($identifier_type == 'user_id') {
 			$pw_hash = $db->select("SELECT `password` FROM `" . DB_TABLE . "` WHERE `id` = :user_id", [ 'user_id' => $identifier ]);
 		}
 
@@ -368,12 +397,20 @@
 		return false;
 	}
 
-	// get user id for specific username from database
-	function getUserId(string $username) {
+	// get user id from database
+	function getUserId($identifier, string $identifier_type='username') {
 		// globalize database connection
 		global $db;
 
-		return (int) $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `username` = :username", [ 'username' => $username ])[0]['id'];
+		switch ($identifier_type) {
+			case 'username':
+				return (int) $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `username` = :username", [ 'username' => $identifier ])[0]['id'];
+				break;
+			
+			case 'token':
+				return (int) $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `token` = :token", [ 'token' => $identifier ])[0]['id'];
+				break;
+		}
 	}
 
 	// is someone logged in?
@@ -595,7 +632,7 @@
 		global $db;
 
 		// create response array
-		$response = ['successs' => false, 'msg' => null];
+		$response = ['success' => false, 'msg' => null];
 
 		// password not entered?
 		if (empty($password)) {
@@ -637,5 +674,116 @@
 			$response['msg'] = ERR_HTML_START . 'An error is occured while getting the password from the database.' . ERR_HTML_END;
 			return $response;
 		}
+	}
+
+	function sendVerificationMail(string $username, string $email, string $token) {
+		$subject = '=?UTF-8?B?'.base64_encode(VERIFY_EMAIL_SUBJECT).'?=';
+    $headers = [
+      "MIME-Version: 1.0",
+      "Content-type: text/plain; charset=utf-8",
+      'From: ' . FROM,
+      'Reply-To: ' . FROM,
+      "Subject: {$subject}",
+      "X-Mailer: PHP/".phpversion()
+    ];
+
+    if ( !empty($email) &&
+    		 mail( $email, $subject, createVerificationMailMessage([ ':username', ':url' ], [ 'username' => $username, 'url' => 'http://jr-cologne.16mb.com/login-script/verify-email.php?token=' . $token ], VERIFY_EMAIL_MSG), implode("\r\n", $headers) )
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+	}
+
+	function createVerificationMailMessage(array $placeholders, array $replacements, string $message) {
+		// replace placeholders in message with replacements and return new message
+		return str_replace($placeholders, $replacements, $message);
+	}
+
+	function resendVerificationMail(int $user_id) {
+		// globalize database connection
+		global $db;
+
+		// create response array
+		$response = ['success' => false, 'msg' => null];
+
+		// email already verified?
+		$email_already_verified = $db->select("SELECT `verified` FROM " . DB_TABLE . " WHERE `id` = :user_id", [ 'user_id' => $user_id ]);
+
+		if ($db->error()) {
+			$error = ERR_HTML_START . 'Something went wrong when trying to check if your email is already verified. Nevertheless we will try to send a new verification mail to your inbox.' . ERR_HTML_END;
+		}
+
+		if (!empty($email_already_verified) && $email_already_verified['verified'] == true) {
+			if (!empty($error)) {
+				$response['msg'] = $error . ERR_HTML_START . 'Your email is already verified. You can simply go ahead and <a href="login.php">log in</a> to your account.' . ERR_HTML_END;
+			} else {
+				$response['msg'] = ERR_HTML_START . 'Your email is already verified. You can simply go ahead and <a href="login.php">log in</a> to your account.' . ERR_HTML_END;
+			}
+			return $response;
+		}
+
+    // create new token for user and update in db
+    $token = bin2hex(random_bytes(16));
+
+    $token_updated = $db->update("UPDATE " . DB_TABLE . " SET `token` = :token WHERE `id` = :user_id", [ 'token' => $token, 'user_id' => $user_id ]);
+
+    if ($token_updated !== true && $db->error()) {
+    	if (!empty($error)) {
+    		$response['msg'] = $error . ERR_HTML_START . 'Something went wrong when creating a new token for the verification process. Please try again.' . ERR_HTML_END;
+    	} else {
+    		$response['msg'] = ERR_HTML_START . 'Something went wrong when creating a new token for the verification process. Please try again.' . ERR_HTML_END;
+    	}
+    	return $response;
+    }
+    
+    // send new mail
+    if ($token_updated === true) {
+    	$userdata = getUserData($user_id, [ 'username', 'email' ]);
+
+    	if (!empty($userdata) && $userdata !== false && !$db->error()) {
+    		if (sendVerificationMail($userdata['username'], $userdata['email'], $token)) {
+    			if (!empty($error)) {
+    				$response = [ 'success' => true, 'msg' => $error . ERR_HTML_START . 'The new mail to verify your email address was successfully sent to your inbox.' . ERR_HTML_END];
+    			} else {
+    				$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'The new mail to verify your email address was successfully sent to your inbox.' . ERR_HTML_END];
+    			}
+    		} else {
+    			if (!empty($error)) {
+    				$response['msg'] = $error . ERR_HTML_START . 'Something went wrong when trying to send the new mail to your inbox in order to verify your email address. Please try again.' . ERR_HTML_END;
+    			} else {
+    				$response['msg'] = ERR_HTML_START . 'Something went wrong when trying to send the new mail to your inbox in order to verify your email address. Please try again.' . ERR_HTML_END;
+    			}
+    		}
+
+    		return $response;
+    	}
+    }
+	}
+
+	function verifyEmail(string $token) {
+		// globalize database connection
+		global $db;
+
+		// create response array
+		$response = ['success' => false, 'msg' => null];
+
+    // verify email where token matches token in db
+    $verified = $db->update("UPDATE " . DB_TABLE . " SET `verified` = 1 WHERE `token` = :token", [ 'token' => $token ]);
+
+    if ($verified === true) {
+    	$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'Your email address has successfully been verified. Now you can go ahead and <a href="login.php">log in</a> to your account!' . ERR_HTML_END ];
+    } else {
+    	$user_id = getUserId($token);
+
+    	if (is_int($user_id)) {
+    		$response['msg'] = ERR_HTML_START . 'Something went wrong when trying to verify your email address. Please try again or <a href="verify-email.php?resend=true&id=' . $user_id . '">order a new verification mail</a>.' . ERR_HTML_END;
+    	} else {
+    		$response['msg'] = ERR_HTML_START . 'Something went wrong when trying to verify your email address. Please try again.' . ERR_HTML_END;
+    	}
+    }
+
+    return $response;
 	}
 ?>
