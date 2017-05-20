@@ -2,13 +2,16 @@
   // start session
   session_start();
 
-  // require functions.php
-  require_once 'php/functions.php';
+  // require all files
+  require_once('php/functions.php');
+  require_once('php/google.php');
 
   // is user logged in?
   if (checkLogin()) {
     // log out user by unsetting logged_in session
     unset($_SESSION['logged_in']);
+  } else if (google_checkLogin()) {
+    google_logout();
   } else {
     // user isn't logged in, redirect user to login page
     header('Location: login.php');
@@ -30,7 +33,7 @@
 
 	<main>
 		<?php
-			if (!checkLogin()) {
+			if (!checkLogin() && !google_checkLogin()) {
 				?>
 				<p><strong>You has been logged out successfully. See you!</strong></p>
 				<?php

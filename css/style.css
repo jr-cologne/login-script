@@ -64,6 +64,10 @@ main p, main a {
   margin: 2% 0;
 }
 
+main .error-message {
+  margin: 2%;
+}
+
 main form {
   display: flex;
   flex-direction: column;

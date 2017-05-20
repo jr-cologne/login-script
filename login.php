@@ -6,9 +6,10 @@
   require_once('php/config.php');
   require_once('php/functions.php');
   require_once('php/db.php');
+  require_once('php/google.php');
 
   // user logged in?
-  if (checkLogin()) {
+  if (checkLogin() || google_checkLogin()) {
     // redirect user to restricted area
     header('Location: index.php');
   }
@@ -26,6 +27,8 @@
       // set user as logged in in session
       $_SESSION['logged_in'] = $response['user_id'];
     }
+  } else if (!empty($_GET['code'])) {
+    $response = google_login($_GET['code']);
   }
 ?>
 
@@ -71,6 +74,13 @@
           <input type="submit" name="login" value="Log in">
         </form>
 
+        <?php
+          // not logged in with google?
+          if (!google_checkLogin()) { // display google sign in button
+            echo google_getSignInButton();
+          }
+        ?>
+        
         <p>You don't already have an account? <a href="register.php">Register here!</a></p>
         <?php
       }

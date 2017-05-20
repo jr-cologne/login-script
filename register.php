@@ -6,9 +6,10 @@
 	require_once('php/config.php');
 	require_once('php/functions.php');
   require_once('php/db.php');
+  require_once('php/google.php');
 
   // user logged in?
-  if (checkLogin()) {
+  if (checkLogin() || google_checkLogin()) {
     // redirect user to restricted area
     header('Location: index.php');
   }

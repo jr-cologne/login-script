@@ -11,7 +11,7 @@
 
 	/***** Settings for checkForm() function *****/
 	// defines the html code that is concatenated with the error message, which the function returns
-	const ERR_HTML_START = '<p><strong>';
+	const ERR_HTML_START = '<p class="error-message"><strong>';
 	const ERR_HTML_END = '</strong></p>';
 
 	// defines the message that will be displayed in the error list
