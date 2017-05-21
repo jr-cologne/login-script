@@ -332,7 +332,7 @@
 						}
 
 						// return response
-						$response = [ 'success' => true, 'msg' => ERR_HTML_START .  'Your are successfully logged in. <a href="index.php">Now you can go to the restricted area</a>!' . ERR_HTML_END, 'user_id' => $user_id ];
+						$response = [ 'success' => true, 'msg' => ERR_HTML_START .  'You are successfully logged in. <a href="index.php">Now you can go to the restricted area</a>!' . ERR_HTML_END, 'user_id' => $user_id ];
 						return $response;
 					} else {	// password is incorrect
 						// return response
@@ -410,6 +410,10 @@
 			case 'token':
 				return (int) $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `token` = :token", [ 'token' => $identifier ])[0]['id'];
 				break;
+
+			case 'google_id':
+				return $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `google_id` = :google_id", [ 'google_id' => $identifier ])[0]['id'];
+				break;
 		}
 	}
 
@@ -423,19 +427,29 @@
 	}
 
 	// get user data
-	function getUserData(int $user_id, array $wanted_data) {
+	function getUserData($user_id, array $wanted_data, string $login_type='standard') {
 		// globalize database connection
 		global $db;
 
 		$fields = '`' . implode('`, `', $wanted_data) . '`';
 
-		return $db->select("SELECT " . $fields . " FROM `" . DB_TABLE . "` WHERE `id` = :user_id", [ 'user_id' => $user_id ])[0];
+		if ($login_type == 'google') {
+			return $db->select("SELECT " . $fields . " FROM `" . DB_TABLE . "` WHERE `google_id` = :user_id", [ 'user_id' => $user_id ])[0];
+		} else {
+			return $db->select("SELECT " . $fields . " FROM `" . DB_TABLE . "` WHERE `id` = :user_id", [ 'user_id' => $user_id ])[0];
+		}
 	}
 
 	// update profile for a specific user
-	function updateProfile(string $username=null, string $email=null, string $new_username=null, string $new_email=null, string $old_password=null, string $new_password=null) {
+	function updateProfile($user_id, string $username=null, string $email=null, string $new_username=null, string $new_email=null, string $old_password=null, string $new_password=null) {
 		// globalize database connection
 		global $db;
+
+		if (!$user_id) {
+			var_dump($user_id);
+			$response['msg'] = ERR_HTML_START . 'An error occured while saving your changes.' . ERR_HTML_END;
+			return $response;
+		}
 
 		// create response array
 		$response = ['success' => false, 'msg' => null];
@@ -446,14 +460,11 @@
 
 		// define array with the form data
 		$form_data = [
-											'new_username' => $new_username,
-											'new_email' => $new_email,
-											'old_password' => $old_password,
-											'new_password' => $new_password
-								 ];
-
-		// get user id of currently logged in user from session
-		$user_id = $_SESSION['logged_in'];
+			'new_username' => $new_username,
+			'new_email' => $new_email,
+			'old_password' => $old_password,
+			'new_password' => $new_password
+		];
 
 		// loop through form data and get array of entered fields
 		foreach ($form_data as $key => $value) {
@@ -785,5 +796,83 @@
     }
 
     return $response;
+	}
+
+	function google_login($code) {
+		global $google_auth;
+		global $db;
+
+		// create response array
+		$response = ['success' => false, 'msg' => null];
+
+	  // successfully logged in with google?
+	  if ($google_auth->checkRedirectCode($code)) {
+	  	// store everything in database
+	  	$payload = $google_auth->getPayload();
+	  	$google_id = $payload['sub'];
+	  	$google_email = $payload['email'];
+	  	$google_email_verified = $payload['email_verified'];
+
+	  	// account with that email already exists?
+	  	if (emailAssigned($google_email)) {
+	  		$updated = $db->update("UPDATE `" . DB_TABLE . "` SET `google_id` = :google_id WHERE `email` = :email", [ 'google_id' => $google_id, 'email' => $google_email ]);
+
+	  		// set user as logged in
+	  		$_SESSION['logged_in'] = $google_id;
+
+	  		if ($updated === true) {
+	  			$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You are successfully logged in with Google. <a href="index.php">Now you can go to the restricted area</a>!' . ERR_HTML_END ];
+	  		} else {
+	  			// logout user from google
+	  			google_logout();
+
+	  			$response['msg'] = ERR_HTML_START . 'Your login with Google failed. Please try again.' . ERR_HTML_END;
+	  		}
+	  	} else {
+	  		// logout user from google
+	  		google_logout();
+
+	  		$response['msg'] = ERR_HTML_START . 'No account with the same email address as your Google account is existing. It is not possible to use an Google acccount with an unused email for the login, because then your account can not be matched to your Google account. If you do not care about that, you can <a href="register.php">register a new/seperate account</a> with your Google account. Otherwise you have to use an Google account, which email matches to the email of your account here.' . ERR_HTML_END;
+	  	}
+	  } else {
+	  	$response['msg'] = ERR_HTML_START . 'Your login with Google failed. Please try again.' . ERR_HTML_END;
+	  }
+
+	  return $response;
+	}
+
+	function google_checkLogin() {
+		return !empty($_SESSION['access_token']);
+	}
+
+	function google_getSignInButton() {
+		global $google_auth;
+
+    return '<a href="' . $google_auth->getAuthUrl() . '">Sign in with Google</a>';
+	}
+
+	function google_logout() {
+		global $google_auth;
+
+		$google_auth->logout($_SESSION['access_token']);
+
+		unset($_SESSION['access_token']);
+	}
+
+	function emailAssigned(string $email) {
+		global $db;
+
+		$assignedEmails = $db->select("SELECT `email` FROM `" . DB_TABLE . "`");
+
+		foreach ($assignedEmails as $key => $value) {
+			unset($assignedEmails[$key]);
+			$assignedEmails[] = $value['email'];
+		}
+
+		if (in_array($email, $assignedEmails)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 ?>

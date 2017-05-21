@@ -3,20 +3,25 @@
 	session_start();
 
 	// require all other files
-	require_once 'php/config.php';
-	require_once 'php/db.php';
-	require_once 'php/functions.php';
+	require_once('php/config.php');
+	require_once('php/db.php');
+	require_once('php/functions.php');
+	require_once('php/google.php');
 
 	// set user as logged out
 	$logged_in = [ 'status' => false, 'user_id' => null ];
 
 	// logged in?
-	if (checkLogin()) {
+	if (checkLogin() || google_checkLogin()) {
 		// set user as logged in
 		$logged_in = [ 'status' => true, 'user_id' => $_SESSION['logged_in'] ];
 
 		// get username and email of logged in user
-		$user_data = getUserData($logged_in['user_id'], [ 'username', 'email' ]);
+		if (google_checkLogin()) {
+			$user_data = getUserData($logged_in['user_id'], [ 'username', 'email' ], 'google');
+		} else {
+			$user_data = getUserData($logged_in['user_id'], [ 'username', 'email' ]);
+		}
 	}
 ?>
 
