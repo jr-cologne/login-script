@@ -1,4 +1,6 @@
 <?php
+  require_once('config.php');
+
   class GoogleAuth {
     protected $client;
 
@@ -6,10 +8,10 @@
       $this->client = $google_client;
 
       if ($this->client) {
-        $this->client->setClientId('374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com');
-        $this->client->setClientSecret('mlWv7EqrB2BLPVmfV7_JHIfS');
-        $this->client->setRedirectUri('http://localhost/GitHub/login-script/login.php');
-        $this->client->setScopes('email');
+        $this->client->setClientId(CLIENT_ID);
+        $this->client->setClientSecret(CLIENT_SECRET);
+        $this->client->setRedirectUri(REDIRECT_URI);
+        $this->client->setScopes(SCOPES);
       }
     }
 

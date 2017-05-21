@@ -46,4 +46,10 @@
 		'Please click on the following link to verify your email: :url' . PHP_EOL . PHP_EOL .
 		'Thanks!'
 	;
+
+	/***** Settings for Google Auth *****/
+	const CLIENT_ID = '374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com';
+	const CLIENT_SECRET = 'mlWv7EqrB2BLPVmfV7_JHIfS';
+	const REDIRECT_URI = 'http://localhost/GitHub/login-script/login.php';
+	const SCOPES = 'email';
 ?>
