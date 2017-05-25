@@ -1,12 +1,11 @@
 <?php
-  // start session
-  session_start();
-
   // require all other files
   require_once('php/config.php');
+  require_once('php/session.php');
   require_once('php/functions.php');
   require_once('php/db.php');
   require_once('php/google.php');
+  require_once('php/csrf.php');
 
   // user logged in?
   if (checkLogin() || google_checkLogin()) {
@@ -71,6 +70,7 @@
             <label for="password">Your Password:</label>
             <input type="password" name="password" id="password">
           </div>
+          <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>">
           <input type="submit" name="login" value="Log in">
         </form>
 

@@ -1,9 +1,7 @@
 <?php
-	// start session
-	session_start();
-
 	// require all other files
 	require_once('php/config.php');
+	require_once('php/session.php');
 	require_once('php/db.php');
 	require_once('php/functions.php');
 	require_once('php/google.php');
