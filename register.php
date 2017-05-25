@@ -7,6 +7,7 @@
 	require_once('php/functions.php');
   require_once('php/db.php');
   require_once('php/google.php');
+  require_once('csrf.php');
 
   // user logged in?
   if (checkLogin() || google_checkLogin()) {
@@ -71,6 +72,7 @@
             <label for="password">Your Password:</label>
             <input type="password" name="password" id="password">
           </div>
+          <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>">
           <input type="submit" name="register" value="Register">
         </form>
 
