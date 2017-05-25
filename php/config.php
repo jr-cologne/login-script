@@ -52,4 +52,15 @@
 	const CLIENT_SECRET = 'mlWv7EqrB2BLPVmfV7_JHIfS';
 	const REDIRECT_URI = 'http://localhost/GitHub/login-script/login.php';
 	const SCOPES = 'email';
+
+	/***** Settings for Session Security *****/
+	ini_set('session.cookie_lifetime', 0);
+	ini_set('session.use-cookies', 'On');
+	ini_set('session.use_only_cookies', 'On');
+	ini_set('session.use_strict_mode', 'On');
+	ini_set('session.cookie_httponly', 'On');
+	// only activate this if you are using https
+	//ini_set('session.cookie_secure', 'On');
+	ini_set('session.use_trans_sid', 'Off');
+	ini_set('session.cache_limiter', 'nocache');
 ?>
