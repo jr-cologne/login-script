@@ -25,7 +25,9 @@ If you want to run the login script on your local machine or your own server, do
 3. Make sure you have PHP and MySQL or another database installed.
 4. Create a new database and then import the table *users*, by the sql file inside the *php* directory, into the database.
 5. Open the file *php/config.php* in your editor and change the login settings for your database connection. Also you can make some changes to the other settings, if you want to.
-6. Now you should be ready to start!
+6. Install the required dependencies for this project. Therefore you must have [Composer](https://getcomposer.org/) installed.
+7. Open up the root directory of this project in your command line and run `composer install`. That should install all dependencies listed in `composer.json`.
+8. Now you should be ready to start!
 
 If you have any trouble installing the login script, you found a bug or you have got a question, open up a Issue and I will try to help you.
 
