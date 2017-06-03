@@ -13,8 +13,8 @@
   }
 
   // verify email
-  if (!empty($_GET['token'])) {
-    $response = verifyEmail($_GET['token']);
+  if (!empty($_GET['token']) && !empty($_GET['email'])) {
+    $response = verifyEmail($_GET['token'], $_GET['email']);
   }
 ?>
 
