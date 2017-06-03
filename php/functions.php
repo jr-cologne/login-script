@@ -407,8 +407,8 @@
 				return (int) $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `username` = :username", [ 'username' => $identifier ])[0]['id'];
 				break;
 			
-			case 'token':
-				return (int) $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `token` = :token", [ 'token' => $identifier ])[0]['id'];
+			case 'email':
+				return (int) $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `email` = :email", [ 'email' => $identifier ])[0]['id'];
 				break;
 
 			case 'google_id':
@@ -698,8 +698,8 @@
       "X-Mailer: PHP/".phpversion()
     ];
 
-    if ( !empty($email) &&
-    		 mail( $email, $subject, createVerificationMailMessage([ ':username', ':url' ], [ 'username' => $username, 'url' => 'http://jr-cologne.16mb.com/login-script/verify-email.php?token=' . $token ], VERIFY_EMAIL_MSG), implode("\r\n", $headers) )
+    if ( !empty($email) && !empty($token) &&
+    		 mail( $email, $subject, createVerificationMailMessage([ ':username', ':url' ], [ 'username' => $username, 'url' => 'http://jr-cologne.16mb.com/login-script/verify-email.php?token=' . $token . '&email=' . $email ], VERIFY_EMAIL_MSG), implode("\r\n", $headers) )
     ) {
       return true;
     } else {
@@ -773,20 +773,22 @@
     }
 	}
 
-	function verifyEmail(string $token) {
+	function verifyEmail(string $token, string $email) {
 		// globalize database connection
 		global $db;
 
 		// create response array
 		$response = ['success' => false, 'msg' => null];
 
-    // verify email where token matches token in db
-    $verified = $db->update("UPDATE " . DB_TABLE . " SET `verified` = 1 WHERE `token` = :token", [ 'token' => $token ]);
+    // verify email where token and email matches token and email in db
+    $verified = $db->update("UPDATE " . DB_TABLE . " SET `verified` = 1 WHERE `token` = :token && `email` = :email", [ 'token' => $token, 'email' => $email ]);
 
     if ($verified === true) {
+    	// clear token
+    	clearToken($email);
     	$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'Your email address has successfully been verified. Now you can go ahead and <a href="login.php">log in</a> to your account!' . ERR_HTML_END ];
     } else {
-    	$user_id = getUserId($token);
+    	$user_id = getUserId($email);
 
     	if (is_int($user_id)) {
     		$response['msg'] = ERR_HTML_START . 'Something went wrong when trying to verify your email address. Please try again or <a href="verify-email.php?resend=true&id=' . $user_id . '">order a new verification mail</a>.' . ERR_HTML_END;
@@ -796,6 +798,18 @@
     }
 
     return $response;
+	}
+
+	function clearToken(string $email) {
+		global $db;
+
+		if (!empty($email)) {
+			if ( $db->update("UPDATE " . DB_TABLE . " SET `token` = NULL WHERE `email` = :email", [ 'email' => $email ]) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	function google_login($code) {
