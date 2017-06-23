@@ -39,12 +39,6 @@ So don't be shy and start coding! If you want to make sure that I like your idea
 
 But if you decide to contribute to this project, keep in mind that at last it is my choice to merge your Pull Request or not, so also be prepared for a negative decision.
 
-## Versioning
-
-I try to follow the rules of Semantic Versioning as good as I can.
-
-For more information about it and if you want to check out the rules, visit http://semver.org/.
-
 ## License
 
 This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
