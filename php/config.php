@@ -48,8 +48,7 @@
 	;
 
 	/***** Settings for Google Auth *****/
-	const CLIENT_ID = '374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com';
-	const CLIENT_SECRET = 'mlWv7EqrB2BLPVmfV7_JHIfS';
+	const AUTH_CONFIG_FILE = 'includes/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json';
 	const REDIRECT_URI = 'http://localhost/GitHub/login-script/login.php';
 	const SCOPES = 'email';
 

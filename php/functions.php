@@ -1,6 +1,4 @@
 <?php
-	require_once('config.php');
-
 	// register new user
 	function register(string $username, string $email, string $password) {
 		// globalize database connection

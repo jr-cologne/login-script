@@ -1,6 +1,4 @@
 <?php
-  require_once('config.php');
-
   class GoogleAuth {
     protected $client;
 
@@ -8,15 +6,15 @@
       $this->client = $google_client;
 
       if ($this->client) {
-        $this->client->setClientId(CLIENT_ID);
-        $this->client->setClientSecret(CLIENT_SECRET);
+        $this->client->setAuthConfig(AUTH_CONFIG_FILE);
+        $this->client->setIncludeGrantedScopes(true);
+        $this->client->addScope(SCOPES);
         $this->client->setRedirectUri(REDIRECT_URI);
-        $this->client->setScopes(SCOPES);
       }
     }
 
     public function getAuthUrl() {
-      return $this->client->createAuthUrl();
+      return filter_var($this->client->createAuthUrl(), FILTER_SANITIZE_URL);
     }
 
     public function checkRedirectCode($code) {
