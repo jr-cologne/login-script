@@ -18,7 +18,7 @@ If you want to do that kind of stuff, create your own account. With that you can
 
 ## Requirements/Dependencies
 
-- [PHP](http://php.net) (version 5.4 or higher)
+- [PHP](http://php.net) (version 7.0 or higher)
 - Database, which supports PDO (e.g. MySQL)
 - [This DB Class](https://github.com/jr-cologne/db-class) in [version 1.0.2](https://github.com/jr-cologne/db-class/tree/v1.0.2)
 - [Google APIs Client Library for PHP](https://github.com/google/google-api-php-client) (version ^2.1)
