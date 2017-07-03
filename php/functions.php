@@ -817,9 +817,15 @@
 		// create response array
 		$response = ['success' => false, 'msg' => null];
 
+		// check redirect code
+		$access_token = $google_auth->checkRedirectCode($code);
+
 	  // successfully logged in with google?
-	  if ($google_auth->checkRedirectCode($code)) {
-	  	// store everything in database
+	  if (!empty($access_token)) {
+	  	// store access token in session
+	  	$_SESSION['access_token'] = $access_token;
+
+	  	// get payload/data
 	  	$payload = $google_auth->getPayload();
 	  	$google_id = $payload['sub'];
 	  	$google_email = $payload['email'];
@@ -827,12 +833,24 @@
 
 	  	// account with that email already exists?
 	  	if (emailAssigned($google_email)) {
+	  		// account already associated with this google account?
+	  		$associated = $db->select("SELECT `google_id` FROM `" . DB_TABLE . "` WHERE `email` = :email && `google_id` = :google_id", [ 'email' => $google_email, 'google_id' => $google_id ]);
+
+	  		if (is_array($associated)) {
+	  			// set user as logged in
+	  			$_SESSION['logged_in'] = $google_id;
+
+	  			$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You are successfully logged in with Google. <a href="index.php">Now you can go to the restricted area</a>!' . ERR_HTML_END ];
+	  			return $response;
+	  		}
+
+	  		// store everything in database
 	  		$updated = $db->update("UPDATE `" . DB_TABLE . "` SET `google_id` = :google_id WHERE `email` = :email", [ 'google_id' => $google_id, 'email' => $google_email ]);
 
-	  		// set user as logged in
-	  		$_SESSION['logged_in'] = $google_id;
-
 	  		if ($updated === true) {
+	  			// set user as logged in
+	  			$_SESSION['logged_in'] = $google_id;
+
 	  			$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You are successfully logged in with Google. <a href="index.php">Now you can go to the restricted area</a>!' . ERR_HTML_END ];
 	  		} else {
 	  			// logout user from google
@@ -847,7 +865,7 @@
 	  		$response['msg'] = ERR_HTML_START . 'No account with the same email address as your Google account is existing. It is not possible to use an Google acccount with an unused email for the login, because then your account can not be matched to your Google account. If you do not care about that, you can <a href="register.php">register a new/seperate account</a> with your Google account. Otherwise you have to use an Google account, which email matches to the email of your account here.' . ERR_HTML_END;
 	  	}
 	  } else {
-	  	$response['msg'] = ERR_HTML_START . 'Your login with Google failed. Please try again.' . ERR_HTML_END;
+	  	$response['msg'] = ERR_HTML_START . 'Authentication with Google failed. Please try again.' . ERR_HTML_END;
 	  }
 
 	  return $response;

@@ -19,20 +19,12 @@
 
     public function checkRedirectCode($code) {
       if (!empty($code)) {
-        $this->client->authenticate($code);
+        $access_token = $this->client->fetchAccessTokenWithAuthCode($code)['access_token'];
 
-        $this->setToken($this->client->getAccessToken());
-
-        return true;
+        return $access_token;
       }
 
       return false;
-    }
-
-    public function setToken($token) {
-      $_SESSION['access_token'] = $token;
-
-      $this->client->setAccessToken($token);
     }
 
     public function logout($token) {
