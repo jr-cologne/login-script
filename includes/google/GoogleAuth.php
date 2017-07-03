@@ -1,6 +1,4 @@
 <?php
-  require_once('config.php');
-
   class GoogleAuth {
     protected $client;
 
@@ -8,33 +6,25 @@
       $this->client = $google_client;
 
       if ($this->client) {
-        $this->client->setClientId(CLIENT_ID);
-        $this->client->setClientSecret(CLIENT_SECRET);
+        $this->client->setAuthConfig(AUTH_CONFIG_FILE);
+        $this->client->setIncludeGrantedScopes(true);
+        $this->client->addScope(SCOPES);
         $this->client->setRedirectUri(REDIRECT_URI);
-        $this->client->setScopes(SCOPES);
       }
     }
 
     public function getAuthUrl() {
-      return $this->client->createAuthUrl();
+      return filter_var($this->client->createAuthUrl(), FILTER_SANITIZE_URL);
     }
 
     public function checkRedirectCode($code) {
       if (!empty($code)) {
-        $this->client->authenticate($code);
+        $access_token = $this->client->fetchAccessTokenWithAuthCode($code)['access_token'];
 
-        $this->setToken($this->client->getAccessToken());
-
-        return true;
+        return $access_token;
       }
 
       return false;
-    }
-
-    public function setToken($token) {
-      $_SESSION['access_token'] = $token;
-
-      $this->client->setAccessToken($token);
     }
 
     public function logout($token) {

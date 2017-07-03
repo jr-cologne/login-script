@@ -1,6 +1,6 @@
 <?php
   require_once 'php/config.php';
-  require_once 'php/db.php';
+  require_once 'includes/db.php';
   require_once 'php/functions.php';
 
   if (empty($_GET['token']) && empty($_GET['resend'])) {
