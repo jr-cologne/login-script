@@ -20,7 +20,7 @@ If you want to do that kind of stuff, create your own account. With that you can
 
 - [PHP](http://php.net) (version 7.0 or higher)
 - Database, which supports PDO (e.g. MySQL)
-- [This DB Class](https://github.com/jr-cologne/db-class) in [version 1.0.2](https://github.com/jr-cologne/db-class/tree/v1.0.2)
+- [This DB Class](https://github.com/jr-cologne/db-class) (at least in [version 1.0.5](https://github.com/jr-cologne/db-class/tree/v1.0.5))
 - [Google APIs Client Library for PHP](https://github.com/google/google-api-php-client) (version ^2.1)
 
 You don't have any clue, what the symbols next to the versions mean? [Read this](https://getcomposer.org/doc/articles/versions.md)!
@@ -50,14 +50,24 @@ That should install all dependencies listed in [`composer.json`](https://github.
 
 #### Manual Installation
 
-Follow the instructions for the manual installation from the own documentations of the dependencies.
+Follow the instructions for the manual installation from the own documentations of the dependencies, but if you are not using Composer, always make sure to remove this line out of the file [`includes/init.php`](https://github.com/jr-cologne/login-script/blob/master/includes/init.php):
 
-For the *Google APIs Client Library* you can [read through this](https://github.com/google/google-api-php-client#download-the-release).
+```php
+require_once('vendor/autoload.php');
+```
 
-After you followed the instructions over there and downloaded it, you just have to put the `google-api-php-client` folder with all files into your `vendor` folder. Finally you must change the path to the autoloader in the file [`php/google.php`](https://github.com/jr-cologne/login-script/blob/master/php/google.php) to this:
+For the *Google APIs Client Library* you can [read through this](https://github.com/google/google-api-php-client#download-the-release) and for the Database Class you can [follow this small documentation](https://github.com/jr-cologne/db-class#manual-installation).
+
+After you followed the instructions over there and downloaded it, you just have to put the `google-api-php-client` folder with all files into your `vendor` folder. Finally you must include the autoloader in the file [`includes/google/google.php`](https://github.com/jr-cologne/login-script/blob/master/includes/google/google.php):
 
 ```php
 require_once('vendor/google-api-php-client/vendor/autoload.php');
+```
+
+The same applies for the Database Class. You have to include the class into the file [`includes/db.php`](https://github.com/jr-cologne/login-script/blob/master/includes/db.php) like so:
+
+```php
+require_once('vendor/db-class/DB.php');
 ```
 
 
