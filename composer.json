@@ -1,5 +1,6 @@
 {
     "require": {
-        "google/apiclient": "^2.1"
+      "jr-cologne/db-class": "^1.0",
+      "google/apiclient": "^2.1"
     }
 }
