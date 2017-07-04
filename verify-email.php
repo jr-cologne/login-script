@@ -1,7 +1,5 @@
 <?php
-  require_once 'php/config.php';
-  require_once 'includes/db.php';
-  require_once 'php/functions.php';
+  require_once('includes/init.php');
 
   if (empty($_GET['token']) && empty($_GET['resend'])) {
     header('Location: index.php');
