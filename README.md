@@ -4,18 +4,6 @@ Welcome to this project, a simple database-based login script with PHP.
 
 Before you get started, I would like to give you a few information about it. So please take a minute and read this small documentation carefully.
 
-## Demo Site
-
-You want to see the project in action? Visit the demo site here: http://jr-cologne.16mb.com/login-script/
-
-You can create your own account or just login with the demo account. These are the credentials:
-
-Username: Test, Password: password
-
-Please do not change them!
-
-If you want to do that kind of stuff, create your own account. With that you can do what you want as long as you don't touch anything else than your own account.
-
 ## Requirements/Dependencies
 
 - [PHP](http://php.net) (version 7.0 or higher)
