@@ -2,14 +2,19 @@
   class GoogleAuth {
     protected $client;
 
-    public function __construct(Google_Client $google_client=null) {
+    public function __construct(Google_Client $google_client=null, string $auth_type='login') {
       $this->client = $google_client;
 
       if ($this->client) {
         $this->client->setAuthConfig(AUTH_CONFIG_FILE);
         $this->client->setIncludeGrantedScopes(true);
         $this->client->addScope(SCOPES);
-        $this->client->setRedirectUri(REDIRECT_URI);
+        
+        if ($auth_type == 'register') {
+          $this->client->setRedirectUri(REDIRECT_URI_REGISTER);
+        } else {
+          $this->client->setRedirectUri(REDIRECT_URI);
+        }
       }
     }
 

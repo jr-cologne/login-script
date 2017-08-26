@@ -68,10 +68,10 @@
 				// verification mail sent successfully?
 				if ($verification_mail) {
 					if (empty($error)) {
-						$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You have been registered successfully and a mail to verify your email address has been sent to your inbox!' . ERR_HTML_END ];
+						$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You have been registered successfully and an email to verify your email address has been sent to your inbox!' . ERR_HTML_END ];
 						return $response;
 					} else {
-						$response = [ 'success' => true, 'msg' => $error . ERR_HTML_START . 'You have been registered successfully and a mail to verify your email address has been sent to your inbox!' . ERR_HTML_END ];
+						$response = [ 'success' => true, 'msg' => $error . ERR_HTML_START . 'You have been registered successfully and an email to verify your email address has been sent to your inbox!' . ERR_HTML_END ];
 						return $response;
 					}
 				} else {
@@ -87,11 +87,11 @@
 				// are there any additional errors?
 				if (empty($error)) {
 					// return normal response
-					$response['msg'] = ERR_HTML_START . 'Registration failed!' . ERR_HTML_END;
+					$response['msg'] = ERR_HTML_START . 'Registration failed. Please try again.' . ERR_HTML_END;
 					return $response;
 				} else {
 					// return additional errors + normal response
-					$response['msg'] = $error . ERR_HTML_START . 'Registration failed!' . ERR_HTML_END;
+					$response['msg'] = $error . ERR_HTML_START . 'Registration failed. Please try again.' . ERR_HTML_END;
 					return $response;
 				}
 			}
@@ -862,7 +862,7 @@
 	  		// logout user from google
 	  		google_logout();
 
-	  		$response['msg'] = ERR_HTML_START . 'No account with the same email address as your Google account is existing. It is not possible to use an Google acccount with an unused email for the login, because then your account can not be matched to your Google account. If you do not care about that, you can <a href="register.php">register a new/seperate account</a> with your Google account. Otherwise you have to use an Google account, which email matches to the email of your account here.' . ERR_HTML_END;
+	  		$response['msg'] = ERR_HTML_START . 'No account with the same email address as your Google account is existing. It is not possible to use an Google acccount with an unused email for the login, because then your account can not be matched to your Google account. If you do not care about that, you can <a href="register.php">register an new/seperate account</a> with your Google account. Otherwise you have to use an Google account, which email matches to the email of your account here.' . ERR_HTML_END;
 	  	}
 	  } else {
 	  	$response['msg'] = ERR_HTML_START . 'Authentication with Google failed. Please try again.' . ERR_HTML_END;
@@ -904,5 +904,99 @@
 		} else {
 			return false;
 		}
+	}
+
+	function google_register($code) {
+		global $google_auth;
+		global $db;
+
+		// create response array
+		$response = ['success' => false, 'msg' => null];
+
+		// check redirect code
+		$access_token = $google_auth->checkRedirectCode($code);
+
+	  // successfully logged in with google?
+	  if (!empty($access_token)) {
+	  	// get payload/data
+	  	$payload = $google_auth->getPayload();
+	  	$google_id = $payload['sub'];
+	  	$google_email = $payload['email'];
+	  	$google_email_verified = $payload['email_verified'];
+
+	  	// account with that email does not already exist?
+	  	if (!emailAssigned($google_email)) {
+	  		// create password
+				$password = bin2hex(random_bytes(16));
+
+	  		// hash password for storing it in database
+				$password = password_hash($password . PEPPER, PASSWORD_DEFAULT, PW_HASH_OPTIONS);
+
+				if (!$google_email_verified) {
+					// create token for email verification
+					$token = bin2hex(random_bytes(16));
+
+					// insert user into database
+					$registered = $db->insert(
+						"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`, `token`, `google_id`) VALUES (:username, :email, :password, :token, :google_id)",
+						[
+						 	'username' => $google_email,
+						 	'email' => $google_email,
+						 	'password' => $password,
+						 	'token' => $token,
+						 	'google_id' => $google_id
+						]
+					);
+				}
+
+				// insert user into database
+				$registered = $db->insert(
+					"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`, `verified`, `token`, `google_id`) VALUES (:username, :email, :password, :verified, :token, :google_id)",
+					[
+					 	'username' => $google_email,
+					 	'email' => $google_email,
+					 	'password' => $password,
+					 	'verified' => 1,
+					 	'token' => '',
+					 	'google_id' => $google_id
+					]
+				);
+
+				// has user successfully been registered?
+				if ($registered === true) {
+					// should a verification mail be sent?
+					if (!$google_email_verified) {
+						// send email for verification
+						$verification_mail = sendVerificationMail($google_email, $google_email, $token);
+
+						// verification mail sent successfully?
+						if ($verification_mail) {
+							$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You have successfully been registered with Google and an email to verify your email address has been sent to your inbox! Because you have registered with Google, we have set your username to your email address and generated a password for you. You can change both things in your control panel, when your are logged in.' . ERR_HTML_END ];
+							return $response;
+						} else {
+							$response = [ 'success' => false, 'msg' => ERR_HTML_START . 'You have successfully been registered with Google, but unfortunately an error occured when trying to send an email to your inbox in order to verify your email address! Please try again and <a href="verify-email.php?resend=true&id=' . getUserId($google_email) . '">order a new verification mail</a>. Because you have registered with Google, we have set your username to your email address and generated a password for you. You can change both things in your control panel, when your are logged in.' . ERR_HTML_END ];
+							return $response;
+						}
+					}
+
+	  			$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You have successfully been registered with Google. Because you have registered with Google, we have set your username to your email address and generated a password for you. You can change both things in your control panel, when your are logged in. For the first time, you have to log in with Google.' . ERR_HTML_END ];
+				} else {	// registration failed
+					// return response
+					$response['msg'] = ERR_HTML_START . 'Registration with Google failed. Please try again.' . ERR_HTML_END;
+				}
+	  	} else {
+	  		$response['msg'] = ERR_HTML_START . 'There is already an account with the same email address your Google account is using. If you want to connect your Google account to the existing account with that email address here, you can simply <a href="login.php">log in to your existing account with Google</a>. Otherwise, if you are trying to create an new/seperate account, just use an other Google account, which email address is not yet used here in order to register.' . ERR_HTML_END;
+	  	}
+	  } else {
+  		$response['msg'] = ERR_HTML_START . 'Authentication with Google failed. Please try again.' . ERR_HTML_END;
+  	}
+
+	  return $response;
+	}
+
+	function google_getSignUpButton() {
+		global $google_auth;
+
+    return '<a href="' . $google_auth->getAuthUrl() . '">Sign up with Google</a>';
 	}
 ?>

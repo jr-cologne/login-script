@@ -1,4 +1,7 @@
 <?php
+  // set Google auth type
+  $auth_type = 'register';
+
   // require all files
   require_once('includes/init.php');
   require_once('includes/google/google.php');
@@ -17,7 +20,9 @@
 	if ($_POST['register'] == 'Register') {
     // register user and get response
 		$response = register($_POST['username'], $_POST['email'], $_POST['password']);
-	}
+	} else if (!empty($_GET['code'])) {
+    $response = google_register($_GET['code']);
+  }
 ?>
 
 <!DOCTYPE html>
@@ -70,6 +75,13 @@
           <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>">
           <input type="submit" name="register" value="Register">
         </form>
+
+        <?php
+          // not logged in with google?
+          if (!google_checkLogin()) { // display google sign in button
+            echo google_getSignUpButton();
+          }
+        ?>
 
         <p>Do you already have an account? <a href="login.php">Log in here!</a></p>
         <?php

@@ -17,7 +17,7 @@
 	// defines the message that will be displayed in the error list
 	const MSG_FOR_EMPTY_FIELDS = [
 		'username' => 'Your Username',
-		'email' => 'Your E-Mail',
+		'email' => 'Your Email',
 		'password' => 'Your Password'
 	];
 
@@ -38,7 +38,7 @@
 	const PW_HASH_OPTIONS = [ 'cost' => 12 ];
 
 	/***** Settings for Email Verification *****/
-	const FROM = 'habichvergessen40@gmail.com';
+	const FROM = 'kontakt@jr-cologne.de';
 	const VERIFY_EMAIL_SUBJECT = 'Restricted Area - Please verify your email!';
 	const VERIFY_EMAIL_MSG =
 		'Hello :username!' . PHP_EOL . PHP_EOL .
@@ -50,6 +50,7 @@
 	/***** Settings for Google Auth *****/
 	const AUTH_CONFIG_FILE = 'includes/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json';
 	const REDIRECT_URI = 'http://localhost/GitHub/login-script/login.php';
+	const REDIRECT_URI_REGISTER = 'http://localhost/GitHub/login-script/register.php';
 	const SCOPES = 'email';
 
 	/***** Settings for Session Security *****/
