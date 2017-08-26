@@ -29,6 +29,8 @@
 	</header>
 
 	<main>
+    <a href="index.php">Back to the homepage</a>
+
 		<?php
 			if (!checkLogin() && !google_checkLogin()) {
 				?>

@@ -957,7 +957,7 @@
 					 	'email' => $google_email,
 					 	'password' => $password,
 					 	'verified' => 1,
-					 	'token' => null,
+					 	'token' => '',
 					 	'google_id' => $google_id
 					]
 				);
