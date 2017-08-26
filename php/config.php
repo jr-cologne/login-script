@@ -1,13 +1,13 @@
 <?php
 	/***** Settings for Error Handling etc. *****/
 	// deactivate notices
-  //error_reporting(E_ALL & ~E_NOTICE);
+  error_reporting(E_ALL & ~E_NOTICE);
 	// deactivate displaying of errors
-  //ini_set('display_errors', 'Off');
+  ini_set('display_errors', 'Off');
   // activate php error logging
-  //ini_set('log_errors', 'On');
+  ini_set('log_errors', 'On');
   // log php errors there
-  //ini_set('error_log', '../login-script-php-errors.log');
+  ini_set('error_log', '../login-script-php-errors.log');
 
 	/***** Settings for checkForm() function *****/
 	// defines the html code that is concatenated with the error message, which the function returns
@@ -38,7 +38,7 @@
 	const PW_HASH_OPTIONS = [ 'cost' => 12 ];
 
 	/***** Settings for Email Verification *****/
-	const FROM = 'habichvergessen40@gmail.com';
+	const FROM = 'kontakt@jr-cologne.de';
 	const VERIFY_EMAIL_SUBJECT = 'Restricted Area - Please verify your email!';
 	const VERIFY_EMAIL_MSG =
 		'Hello :username!' . PHP_EOL . PHP_EOL .
