@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `verified` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `token` varchar(32) COLLATE utf8_unicode_ci NOT NULL,
   `google_id` varchar(30) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `google_init_password` tinyint(1) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
