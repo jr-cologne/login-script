@@ -1,6 +1,7 @@
 <?php
   // require all files
   require_once('includes/init.php');
+  require_once('includes/google/google.php');
   require_once('includes/csrf.php');
 
   // set user as logged out
@@ -17,6 +18,19 @@
     if ($_POST['delete_account'] == 'Delete account') {
       // delete account
       $response = deleteAccount($logged_in['user_id'], $_POST['password']);
+    }
+  } else if (google_checkLogin()) {
+    // set user as logged in
+    $logged_in = [ 'status' => true, 'user_id' => $_SESSION['logged_in'] ];
+
+    // delete_account form submitted?
+    if ($_POST['delete_account'] == 'Delete account') {
+      // delete account
+      $response = deleteAccount(getUserId($logged_in['user_id'], 'google_id'), $_POST['password']);
+
+      if ($response['success']) {
+        google_logout();
+      }
     }
   } else {
     // user isn't logged in, redirect user

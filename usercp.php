@@ -29,10 +29,13 @@
     // get username and email of logged in user
     $user_data = getUserData($logged_in['user_id'], [ 'username', 'email' ], 'google');
 
+    // is the password still the initial one set when registering with Google?
+    $google_is_init_password = google_isInitPassword(getUserId($logged_in['user_id'], 'google_id'));
+
     // update_profile form submitted?
     if ($_POST['update_profile'] == 'Save changes') {
       // update profile and get response
-      $response = updateProfile(getUserId($logged_in['user_id'], 'google_id'), $user_data['username'], $user_data['email'], $_POST['new_username'], $_POST['new_email'], $_POST['old_password'], $_POST['new_password']);
+      $response = updateProfile(getUserId($logged_in['user_id'], 'google_id'), $user_data['username'], $user_data['email'], $_POST['new_username'], $_POST['new_email'], $_POST['old_password'], $_POST['new_password'], $google_is_init_password);
     }
   } else {
     // user isn't logged in, redirect user
@@ -54,14 +57,20 @@
   </header>
 
   <main>
-    
+
+    <a href="index.php">Back to the homepage</a>
+
     <?php
+      if ($google_is_init_password) {
+        ?>
+          <p>Your password is still the initial one since you registered with Google, right? Then just fill in "google" into the old password field and enter your wished new password, so that you are able to login with your username and password as well.</p>
+        <?php
+      }
+
       if (!empty($response['msg'])) {
         echo $response['msg'];
       }
     ?>
-
-    <a href="index.php">Back to the homepage</a>
 
     <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
       <div class="field_wrap">

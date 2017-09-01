@@ -439,12 +439,11 @@
 	}
 
 	// update profile for a specific user
-	function updateProfile($user_id, string $username=null, string $email=null, string $new_username=null, string $new_email=null, string $old_password=null, string $new_password=null) {
+	function updateProfile($user_id, string $username=null, string $email=null, string $new_username=null, string $new_email=null, string $old_password=null, string $new_password=null, bool $google_is_init_password=false) {
 		// globalize database connection
 		global $db;
 
 		if (!$user_id) {
-			var_dump($user_id);
 			$response['msg'] = ERR_HTML_START . 'An error occured while saving your changes.' . ERR_HTML_END;
 			return $response;
 		}
@@ -475,7 +474,6 @@
 		if (count($entered_fields) >= 1) {
 			// old password empty?
 			if (empty($old_password) && !empty($new_password)) {
-				// old password is empty, return response
 				$response['msg'] = ERR_HTML_START . 'The old password is empty. Please enter it.' . ERR_HTML_END;
 				return $response;
 			} else if (empty($new_password) && !empty($old_password)) {	// new password is empty
@@ -535,6 +533,11 @@
 						break;
 
 					case 'old_password':
+            if ($google_is_init_password && strtolower($old_password) == 'google') {
+              $old_password_correct = true;
+              break;
+            }
+
 						// get hashed password from database
 						$pw_hash = getPasswordHash($user_id, 'user_id');
 
@@ -602,6 +605,8 @@
 				}
 			}
 
+      $set = '';
+
 			foreach ($userdata_to_update as $value) {
 				$set .= '`' . $value . '` = :' . $value;
 
@@ -618,7 +623,13 @@
 
 			// was updating of the data successful?
 			if ($data_updated === true) {
-				// updating was successful, return response
+				// updating was successful, initial google password has been overwritten?
+        if (in_array('password', $userdata_to_update) && strtolower($old_password) == 'google') {
+          // set that account no longer has the initial google password
+          google_setInitPasswordToFalse($user_id);
+        }
+
+        // return response
 				$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'Your changes have been saved successfully.' . ERR_HTML_END ];
 				return $response;
 			} else {	// updating wasn't successful
@@ -666,7 +677,7 @@
 					unset($_SESSION['logged_in']);
 
 					// return response
-					$response = [ 'successs' => true, 'msg' => ERR_HTML_START . 'Your account has been deleted successsfully. <a href="index.php">Back to homepage</a>' . ERR_HTML_END ];
+					$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'Your account has been deleted successfully. <a href="index.php">Back to homepage</a>' . ERR_HTML_END ];
 					return $response;
 				} else {
 					// return response
@@ -938,27 +949,29 @@
 
 					// insert user into database
 					$registered = $db->insert(
-						"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`, `token`, `google_id`) VALUES (:username, :email, :password, :token, :google_id)",
+						"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`, `token`, `google_id`, `google_init_password`) VALUES (:username, :email, :password, :token, :google_id, :google_init_password)",
 						[
 						 	'username' => $google_email,
 						 	'email' => $google_email,
 						 	'password' => $password,
 						 	'token' => $token,
-						 	'google_id' => $google_id
+						 	'google_id' => $google_id,
+              'google_init_password' => 1
 						]
 					);
 				}
 
 				// insert user into database
 				$registered = $db->insert(
-					"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`, `verified`, `token`, `google_id`) VALUES (:username, :email, :password, :verified, :token, :google_id)",
+					"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`, `verified`, `token`, `google_id`, `google_init_password`) VALUES (:username, :email, :password, :verified, :token, :google_id, :google_init_password)",
 					[
 					 	'username' => $google_email,
 					 	'email' => $google_email,
 					 	'password' => $password,
 					 	'verified' => 1,
 					 	'token' => '',
-					 	'google_id' => $google_id
+					 	'google_id' => $google_id,
+            'google_init_password' => 1
 					]
 				);
 
@@ -999,4 +1012,19 @@
 
     return '<a href="' . $google_auth->getAuthUrl() . '">Sign up with Google</a>';
 	}
+
+  function google_isInitPassword(int $user_id) {
+    global $db;
+
+    return (bool) $db->select("SELECT `google_init_password` FROM " . DB_TABLE . " WHERE `id` = :user_id", [ 'user_id' => $user_id ])[0]['google_init_password'];
+  }
+
+  function google_setInitPasswordToFalse(int $user_id) {
+    global $db;
+
+    return $db->update(
+      "UPDATE " . DB_TABLE . " SET `google_init_password` = :google_init_password WHERE `id` = :user_id",
+      [ 'google_init_password' => 0, 'user_id' => $user_id ]
+    );
+  }
 ?>
