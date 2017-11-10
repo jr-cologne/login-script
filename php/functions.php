@@ -494,6 +494,13 @@
 							return $response;
 						}
 
+            // is username already assigned?
+            if (usernameAssigned($new_username)) {
+              // username is already assigned
+              $response['msg'] = ERR_HTML_START . 'The username is already assigned. Please choose another one.' . ERR_HTML_END;
+              return $response;
+            }
+
 						// check new username
 						$checked_new_username = checkSpecificFormData($new_username, 'username');
 
@@ -516,6 +523,13 @@
 							$response['msg'] = ERR_HTML_START . 'The email is the same as before. Please choose a new one.' . ERR_HTML_END;
 							return $response;
 						}
+
+            // is email already assigned?
+            if (emailAssigned($new_email)) {
+              // email is already assigned
+              $response['msg'] = ERR_HTML_START . 'The email is already assigned. Please choose another one.' . ERR_HTML_END;
+              return $response;
+            }
 
 						// check new email
 						$checked_new_email = checkSpecificFormData($new_email, 'email');
@@ -1026,5 +1040,16 @@
       "UPDATE " . DB_TABLE . " SET `google_init_password` = :google_init_password WHERE `id` = :user_id",
       [ 'google_init_password' => 0, 'user_id' => $user_id ]
     );
+  }
+
+  // check if username is already assigned
+  function usernameAssigned(string $username) {
+    global $db;
+
+    if ( !$db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `username` = :username", [ 'username' => $username ]) ) {
+      return false;
+    }
+
+    return true;
   }
 ?>
