@@ -1027,7 +1027,7 @@
   function usernameAssigned(string $username) {
     global $db;
 
-    if ( !$db->table(DB_TABLE)->select('id', [ 'username' => $username ])->retrieve() ) {
+    if ( !$db->table(DB_TABLE)->select('id', [ 'username' => $username ])->retrieve('first') ) {
       return false;
     }
 
