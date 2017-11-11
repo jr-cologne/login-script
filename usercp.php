@@ -9,6 +9,8 @@
   // set response
   $response = null;
 
+  $google_is_init_password = false;
+
   // logged in?
   if (checkLogin()) {
     // set user as logged in

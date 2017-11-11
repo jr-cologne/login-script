@@ -28,10 +28,7 @@
   const DB_NAME = 'login-script';
   const DB_TABLE = 'users';
   const DB_USER = 'root';
-  const DB_PASSWORD = '';
-
-  // define error mode
-  const PDO_ERROR_MODE = PDO::ERRMODE_EXCEPTION;
+  const DB_PASSWORD = 'root';
 
   /***** Settings for password hashing *****/
   const PEPPER = 'S3Aze&H!qa8heXEka+UP';
@@ -49,8 +46,8 @@
 
   /***** Settings for Google Auth *****/
   const AUTH_CONFIG_FILE = 'includes/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json';
-  const REDIRECT_URI = 'http://localhost/GitHub/login-script/login.php';
-  const REDIRECT_URI_REGISTER = 'http://localhost/GitHub/login-script/register.php';
+  const REDIRECT_URI = 'http://localhost:8080/GitHub/login-script/login.php';
+  const REDIRECT_URI_REGISTER = 'http://localhost:8080/GitHub/login-script/register.php';
   const SCOPES = 'email';
 
   /***** Settings for Session Security *****/

@@ -50,8 +50,7 @@
 			$token = bin2hex(random_bytes(16));
 
 			// insert user into database
-			$userRegistered = $db->insert(
-				"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`, `token`) VALUES (:username, :email, :password, :token)",
+			$userRegistered = $db->table(DB_TABLE)->insert(
 				[
 				 	'username' => $username,
 				 	'email' => $email,
@@ -61,7 +60,7 @@
 			);
 
 			// has user successfully been registered?
-			if ($userRegistered === true) {
+			if ($userRegistered) {
 				// send email for verification
 				$verification_mail = sendVerificationMail($username, $email, $token);
 
@@ -235,10 +234,10 @@
 		global $db;
 
 		// get already assigned user data from database
-		$alreadyAssignedUserData = $db->select("SELECT `username`, `email` FROM `" . DB_TABLE . "`");
+		$alreadyAssignedUserData = $db->table(DB_TABLE)->select('username, email')->retrieve();
 
 		// check if there is already assigned user data
-		if ( !empty($alreadyAssignedUserData) && $alreadyAssignedUserData !== false && !$db->error() ) {
+		if ( !empty($alreadyAssignedUserData) && $alreadyAssignedUserData !== false ) {
 			// reorder $alreadyAssignedUserData array to one-dimensional array to make the checks easier
 			foreach ($alreadyAssignedUserData as $key => $row) {
 				$alreadyAssignedUserData[] = strtolower($row['username']);
@@ -258,7 +257,7 @@
 			} else {	// nothing is already assigned
 				return true;
 			}
-		} else if ( empty($alreadyAssignedUserData) && $alreadyAssignedUserData !== false && !$db->error() ) {	// there is no already assigned user data
+		} else if ( empty($alreadyAssignedUserData) && $alreadyAssignedUserData !== false ) {	// there is no already assigned user data
 			return true;
 		} else {
 			return false;
@@ -305,9 +304,9 @@
 				$user_id = getUserId($username);
 
 				// email verified?
-				$email_verified = (bool) $db->select("SELECT `verified` FROM " . DB_TABLE . " WHERE `id` = :user_id", [ 'user_id' => $user_id ])[0]['verified'];
+				$email_verified = (bool) $db->table(DB_TABLE)->select('verified', [ 'id' => $user_id ])->retrieve('first');
 
-				if (!$email_verified || $db->error()) {
+				if (!$email_verified) {
 					$response['msg'] = ERR_HTML_START . 'Your email is not verified or an error connected to that occured. Please make sure that your email is verified. In case you lost the verification mail, you can <a href="verify-email.php?resend=true&id=' . $user_id . '">order a new one</a>.' . ERR_HTML_END;
 					return $response;
 				}
@@ -358,10 +357,10 @@
 		// globalize database connection
 		global $db;
 
-		$existingUsers = $db->select("SELECT `username` FROM `" . DB_TABLE . "`");
+		$existingUsers = $db->table(DB_TABLE)->select('username')->retrieve();
 
 		// is an error occured when getting list of existing users?
-		if ($db->error()) {
+		if ($existingUsers === false) {
 			return false;
 		}
 
@@ -383,13 +382,13 @@
 		global $db;
 
 		if ($identifier_type == 'username') {
-			$pw_hash = $db->select("SELECT `password` FROM `" . DB_TABLE . "` WHERE `username` = :username", [ 'username' => $identifier ]);
+			$pw_hash = $db->table(DB_TABLE)->select('password', [ 'username' => $identifier ])->retrieve('first')['password'];
 		} else if ($identifier_type == 'user_id') {
-			$pw_hash = $db->select("SELECT `password` FROM `" . DB_TABLE . "` WHERE `id` = :user_id", [ 'user_id' => $identifier ]);
+			$pw_hash = $db->table(DB_TABLE)->select('password', [ 'id' => $identifier ])->retrieve('first')['password'];
 		}
 
-		if ( !empty($pw_hash) && $pw_hash !== false && !$db->error() ) {
-			return $pw_hash[0]['password'];
+		if ( !empty($pw_hash) && $pw_hash !== false ) {
+			return $pw_hash;
 		}
 
 		return false;
@@ -402,15 +401,15 @@
 
 		switch ($identifier_type) {
 			case 'username':
-				return (int) $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `username` = :username", [ 'username' => $identifier ])[0]['id'];
+				return (int) $db->table(DB_TABLE)->select('id', [ 'username' => $identifier ])->retrieve('first')['id'];
 				break;
 			
 			case 'email':
-				return (int) $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `email` = :email", [ 'email' => $identifier ])[0]['id'];
+				return (int) $db->table(DB_TABLE)->select('id', [ 'email' => $identifier ])->retrieve('first')['id'];
 				break;
 
 			case 'google_id':
-				return $db->select("SELECT `id` FROM `" . DB_TABLE . "` WHERE `google_id` = :google_id", [ 'google_id' => $identifier ])[0]['id'];
+				return $db->table(DB_TABLE)->select('id', [ 'google_id' => $identifier ])->retrieve('first')['id'];
 				break;
 		}
 	}
@@ -429,12 +428,12 @@
 		// globalize database connection
 		global $db;
 
-		$fields = '`' . implode('`, `', $wanted_data) . '`';
+		$fields = implode(',', $wanted_data);
 
 		if ($login_type == 'google') {
-			return $db->select("SELECT " . $fields . " FROM `" . DB_TABLE . "` WHERE `google_id` = :user_id", [ 'user_id' => $user_id ])[0];
+			return $db->table(DB_TABLE)->select($fields, [ 'google_id' => $user_id ])->retrieve('first');
 		} else {
-			return $db->select("SELECT " . $fields . " FROM `" . DB_TABLE . "` WHERE `id` = :user_id", [ 'user_id' => $user_id ])[0];
+			return $db->table(DB_TABLE)->select($fields, [ 'id' => $user_id ])->retrieve('first');
 		}
 	}
 
@@ -494,6 +493,13 @@
 							return $response;
 						}
 
+            // is username already assigned?
+            if (usernameAssigned($new_username)) {
+              // username is already assigned
+              $response['msg'] = ERR_HTML_START . 'The username is already assigned. Please choose another one.' . ERR_HTML_END;
+              return $response;
+            }
+
 						// check new username
 						$checked_new_username = checkSpecificFormData($new_username, 'username');
 
@@ -516,6 +522,13 @@
 							$response['msg'] = ERR_HTML_START . 'The email is the same as before. Please choose a new one.' . ERR_HTML_END;
 							return $response;
 						}
+
+            // is email already assigned?
+            if (emailAssigned($new_email)) {
+              // email is already assigned
+              $response['msg'] = ERR_HTML_START . 'The email is already assigned. Please choose another one.' . ERR_HTML_END;
+              return $response;
+            }
 
 						// check new email
 						$checked_new_email = checkSpecificFormData($new_email, 'email');
@@ -605,24 +618,11 @@
 				}
 			}
 
-      $set = '';
-
-			foreach ($userdata_to_update as $value) {
-				$set .= '`' . $value . '` = :' . $value;
-
-				if ( !empty(next($userdata_to_update)) ) {
-					$set .= ', ';
-				}
-			}
-
 			// update the data in the database
-			$data_updated = $db->update(
-				"UPDATE `" . DB_TABLE . "` SET " . $set . " WHERE `id` = :user_id",
-				array_merge($update_values, [ 'user_id' => $user_id ])
-			);
+			$data_updated = $db->table(DB_TABLE)->update($update_values, [ 'id' => $user_id ]);
 
 			// was updating of the data successful?
-			if ($data_updated === true) {
+			if ($data_updated) {
 				// updating was successful, initial google password has been overwritten?
         if (in_array('password', $userdata_to_update) && strtolower($old_password) == 'google') {
           // set that account no longer has the initial google password
@@ -669,10 +669,10 @@
 			// password hash has been returned, verify password
 			if (password_verify($password . PEPPER, $pw_hash)) {
 				// password is correct, delete account
-				$deleted = $db->delete("DELETE FROM `" . DB_TABLE . "` WHERE `id` = :user_id", [ 'user_id' => $user_id ]);
+				$deleted = $db->table(DB_TABLE)->delete([ 'id' => $user_id ]);
 
 				// deleted account successsfully?
-				if ($deleted === true) {
+				if ($deleted) {
 					// destroy session/log out user
 					unset($_SESSION['logged_in']);
 
@@ -729,9 +729,9 @@
 		$response = ['success' => false, 'msg' => null];
 
 		// email already verified?
-		$email_already_verified = $db->select("SELECT `verified` FROM " . DB_TABLE . " WHERE `id` = :user_id", [ 'user_id' => $user_id ]);
+		$email_already_verified = $db->table(DB_TABLE)->select('verified', [ 'id' => $user_id ])->retrieve('first');
 
-		if ($db->error()) {
+		if ($email_already_verified === false) {
 			$error = ERR_HTML_START . 'Something went wrong when trying to check if your email is already verified. Nevertheless we will try to send a new verification mail to your inbox.' . ERR_HTML_END;
 		}
 
@@ -747,9 +747,9 @@
     // create new token for user and update in db
     $token = bin2hex(random_bytes(16));
 
-    $token_updated = $db->update("UPDATE " . DB_TABLE . " SET `token` = :token WHERE `id` = :user_id", [ 'token' => $token, 'user_id' => $user_id ]);
+    $token_updated = $db->table(DB_TABLE)->update([ 'token' => $token ], [ 'id' => $user_id ]);
 
-    if ($token_updated !== true && $db->error()) {
+    if (!$token_updated) {
     	if (!empty($error)) {
     		$response['msg'] = $error . ERR_HTML_START . 'Something went wrong when creating a new token for the verification process. Please try again.' . ERR_HTML_END;
     	} else {
@@ -759,10 +759,10 @@
     }
     
     // send new mail
-    if ($token_updated === true) {
+    if ($token_updated) {
     	$userdata = getUserData($user_id, [ 'username', 'email' ]);
 
-    	if (!empty($userdata) && $userdata !== false && !$db->error()) {
+    	if (!empty($userdata) && $userdata !== false) {
     		if (sendVerificationMail($userdata['username'], $userdata['email'], $token)) {
     			if (!empty($error)) {
     				$response = [ 'success' => true, 'msg' => $error . ERR_HTML_START . 'The new mail to verify your email address was successfully sent to your inbox.' . ERR_HTML_END];
@@ -790,9 +790,9 @@
 		$response = ['success' => false, 'msg' => null];
 
     // verify email where token and email matches token and email in db
-    $verified = $db->update("UPDATE " . DB_TABLE . " SET `verified` = 1 WHERE `token` = :token && `email` = :email", [ 'token' => $token, 'email' => $email ]);
+    $verified = $db->table(DB_TABLE)->update([ 'verified' => 1 ], [ 'token' => $token, 'email' => $email ]);
 
-    if ($verified === true) {
+    if ($verified) {
     	// clear token
     	clearToken($email);
     	$response = [ 'success' => true, 'msg' => ERR_HTML_START . 'Your email address has successfully been verified. Now you can go ahead and <a href="login.php">log in</a> to your account!' . ERR_HTML_END ];
@@ -813,7 +813,7 @@
 		global $db;
 
 		if (!empty($email)) {
-			if ( $db->update("UPDATE " . DB_TABLE . " SET `token` = NULL WHERE `email` = :email", [ 'email' => $email ]) ) {
+			if ( $db->table(DB_TABLE)->update([ 'token' => '' ], [ 'email' => $email ]) ) {
 				return true;
 			}
 		}
@@ -845,9 +845,9 @@
 	  	// account with that email already exists?
 	  	if (emailAssigned($google_email)) {
 	  		// account already associated with this google account?
-	  		$associated = $db->select("SELECT `google_id` FROM `" . DB_TABLE . "` WHERE `email` = :email && `google_id` = :google_id", [ 'email' => $google_email, 'google_id' => $google_id ]);
+	  		$associated = $db->table(DB_TABLE)->select('google_id', [ 'email' => $google_email, 'google_id' => $google_id ])->retrieve('first');
 
-	  		if (is_array($associated)) {
+	  		if (!empty($associated)) {
 	  			// set user as logged in
 	  			$_SESSION['logged_in'] = $google_id;
 
@@ -856,9 +856,9 @@
 	  		}
 
 	  		// store everything in database
-	  		$updated = $db->update("UPDATE `" . DB_TABLE . "` SET `google_id` = :google_id WHERE `email` = :email", [ 'google_id' => $google_id, 'email' => $google_email ]);
+	  		$updated = $db->table(DB_TABLE)->update([ 'google_id' => $google_id ], [ 'email' => $google_email ]);
 
-	  		if ($updated === true) {
+	  		if ($updated) {
 	  			// set user as logged in
 	  			$_SESSION['logged_in'] = $google_id;
 
@@ -903,7 +903,7 @@
 	function emailAssigned(string $email) {
 		global $db;
 
-		$assignedEmails = $db->select("SELECT `email` FROM `" . DB_TABLE . "`");
+		$assignedEmails = $db->table(DB_TABLE)->select('email')->retrieve();
 
 		foreach ($assignedEmails as $key => $value) {
 			unset($assignedEmails[$key]);
@@ -948,8 +948,7 @@
 					$token = bin2hex(random_bytes(16));
 
 					// insert user into database
-					$registered = $db->insert(
-						"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`, `token`, `google_id`, `google_init_password`) VALUES (:username, :email, :password, :token, :google_id, :google_init_password)",
+					$registered = $db->table(DB_TABLE)->insert(
 						[
 						 	'username' => $google_email,
 						 	'email' => $google_email,
@@ -962,8 +961,7 @@
 				}
 
 				// insert user into database
-				$registered = $db->insert(
-					"INSERT INTO `" . DB_TABLE . "` (`username`, `email`, `password`, `verified`, `token`, `google_id`, `google_init_password`) VALUES (:username, :email, :password, :verified, :token, :google_id, :google_init_password)",
+				$registered = $db->table(DB_TABLE)->insert(
 					[
 					 	'username' => $google_email,
 					 	'email' => $google_email,
@@ -976,7 +974,7 @@
 				);
 
 				// has user successfully been registered?
-				if ($registered === true) {
+				if ($registered) {
 					// should a verification mail be sent?
 					if (!$google_email_verified) {
 						// send email for verification
@@ -1016,15 +1014,23 @@
   function google_isInitPassword(int $user_id) {
     global $db;
 
-    return (bool) $db->select("SELECT `google_init_password` FROM " . DB_TABLE . " WHERE `id` = :user_id", [ 'user_id' => $user_id ])[0]['google_init_password'];
+    return (bool) $db->table(DB_TABLE)->select('google_init_password', [ 'id' => $user_id ])->retrieve('first')['google_init_password'];
   }
 
   function google_setInitPasswordToFalse(int $user_id) {
     global $db;
 
-    return $db->update(
-      "UPDATE " . DB_TABLE . " SET `google_init_password` = :google_init_password WHERE `id` = :user_id",
-      [ 'google_init_password' => 0, 'user_id' => $user_id ]
-    );
+    return $db->table(DB_TABLE)->update([ 'google_init_password' => 0 ], [ 'id' => $user_id ]);
+  }
+
+  // check if username is already assigned
+  function usernameAssigned(string $username) {
+    global $db;
+
+    if ( !$db->table(DB_TABLE)->select('id', [ 'username' => $username ])->retrieve('first') ) {
+      return false;
+    }
+
+    return true;
   }
 ?>
