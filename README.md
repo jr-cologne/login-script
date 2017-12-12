@@ -8,7 +8,7 @@ Before you get started, I would like to give you a few information about it. So 
 
 - [PHP](http://php.net) (version 7.0 or higher)
 - Database, which supports PDO (e.g. MySQL)
-- [This DB Class](https://github.com/jr-cologne/db-class) (at least in [version 2.1.0](https://github.com/jr-cologne/db-class/tree/v2.1.0))
+- [jr-cologne/db-class](https://github.com/jr-cologne/db-class) (version ^2.1)
 - [Google APIs Client Library for PHP](https://github.com/google/google-api-php-client) (version ^2.2)
 
 You don't have any clue, what the symbols next to the versions mean? [Read this](https://getcomposer.org/doc/articles/versions.md)!
