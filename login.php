@@ -1,17 +1,23 @@
 <?php
   // require all files
-  require_once('includes/init.php');
-  require_once('includes/google/google.php');
-  require_once('includes/csrf.php');
+  require_once 'includes/init.php';
+  require_once 'includes/google/google.php';
+  require_once 'includes/twitter/twitter.php';
+  require_once 'includes/csrf.php';
 
   // user logged in?
-  if (checkLogin() || google_checkLogin()) {
+  if (checkLogin() || google_checkLogin() || twitter_checkLogin()) {
     // redirect user to restricted area
     header('Location: index.php');
   }
 
   // set response
   $response = null;
+
+  if (!empty($_SESSION['response'])) {
+    $response = $_SESSION['response'];
+    unset($_SESSION['response']);
+  }
 
   // login form submitted?
   if ($_POST['login'] == 'Log in') {
@@ -75,6 +81,11 @@
           // not logged in with google?
           if (!google_checkLogin()) { // display google sign in button
             echo google_getSignInButton();
+          }
+
+          // not logged in with twitter?
+          if (!twitter_checkLogin()) {  // display twitter sign in button
+            echo twitter_getSignInButton();
           }
         ?>
         

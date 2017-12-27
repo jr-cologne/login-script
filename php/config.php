@@ -1,13 +1,13 @@
 <?php
   /***** Settings for Error Handling etc. *****/
   // deactivate notices
-  error_reporting(E_ALL & ~E_NOTICE);
+  //error_reporting(E_ALL & ~E_NOTICE);
   // deactivate displaying of errors
-  ini_set('display_errors', 'Off');
+  //ini_set('display_errors', 'Off');
   // activate php error logging
-  ini_set('log_errors', 'On');
+  //ini_set('log_errors', 'On');
   // log php errors there
-  ini_set('error_log', '../login-script-php-errors.log');
+  //ini_set('error_log', '../login-script-php-errors.log');
 
   /***** Settings for checkForm() function *****/
   // defines the html code that is concatenated with the error message, which the function returns
@@ -45,10 +45,15 @@
   ;
 
   /***** Settings for Google Auth *****/
-  const AUTH_CONFIG_FILE = 'includes/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json';
-  const REDIRECT_URI = 'http://localhost:8080/GitHub/login-script/login.php';
-  const REDIRECT_URI_REGISTER = 'http://localhost:8080/GitHub/login-script/register.php';
-  const SCOPES = 'email';
+  const GOOGLE_AUTH_CONFIG_FILE = 'includes/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json';
+  const GOOGLE_REDIRECT_URI = 'http://localhost:8080/GitHub/login-script/login.php';
+  const GOOGLE_REDIRECT_URI_REGISTER = 'http://localhost:8080/GitHub/login-script/register.php';
+  const GOOGLE_SCOPES = 'email';
+
+  /***** Settings for Twitter Auth *****/
+  const TWITTER_AUTH_CONFIG_FILE = 'includes/twitter/twitter-api-credentials.json';
+  const TWITTER_REDIRECT_URI = 'http://localhost:8080/GitHub/login-script/twitter_callback.php';
+  const TWITTER_REDIRECT_URI_REGISTER = 'http://localhost:8080/GitHub/login-script/twitter_callback.php?auth_type=register';
 
   /***** Settings for Session Security *****/
   ini_set('session.cookie_lifetime', 0);

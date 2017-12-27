@@ -1,7 +1,8 @@
 <?php
   // require all files
-  require_once('includes/init.php');
-  require_once('includes/google/google.php');
+  require_once 'includes/init.php';
+  require_once 'includes/google/google.php';
+  require_once 'includes/twitter/twitter.php';
 
   // is user logged in?
   if (checkLogin()) {
@@ -9,6 +10,8 @@
     unset($_SESSION['logged_in']);
   } else if (google_checkLogin()) {
     google_logout();
+  } else if (twitter_checkLogin()) {
+    twitter_logout();
   } else {
     // user isn't logged in, redirect user to login page
     header('Location: login.php');
@@ -32,7 +35,7 @@
     <a href="index.php">Back to the homepage</a>
 
 		<?php
-			if (!checkLogin() && !google_checkLogin()) {
+			if (!checkLogin() && !google_checkLogin() && !twitter_checkLogin()) {
 				?>
 				<p><strong>You has been logged out successfully. See you!</strong></p>
 				<?php
