@@ -20,6 +20,10 @@ header, main, footer {
   display: block;
 }
 
+.mt-0 {
+  margin-top: 0;
+}
+
 h1, h2 {
   font-family: Merriweather, serif;
 }
@@ -155,7 +159,7 @@ footer #github-wrap {
 
 footer a {
   color: #666;
-  padding: 0 0.5%;
+  padding: 0 10px;
   text-decoration: none;
   transition: color .3s linear;
 }
@@ -167,7 +171,7 @@ footer a:hover {
 footer #github-icon {
   height: 25px;
   width: 25px;
-  margin: 0 1%;
+  margin: 0 20px;
 }
 
 @media only screen and (max-width: 1024px) {
@@ -198,9 +202,6 @@ footer #github-icon {
   footer {
     padding: 1%;
   }
-  footer a {
-    padding: 0 1%;
-  }
 }
 
 @media only screen and (max-width: 860px) {
@@ -227,7 +228,7 @@ footer #github-icon {
     padding: 1.5%;
   }
   footer a {
-    padding: 0 1.5%;
+    padding: 0 15px;
   }
 }
 
@@ -262,7 +263,7 @@ footer #github-icon {
     padding: 2%;
   }
   footer a {
-    padding: 0 2.5%;
+    padding: 0 25px;
   }
 }
 

@@ -1,13 +1,13 @@
 <?php
   /***** Settings for Error Handling etc. *****/
   // deactivate notices
-  //error_reporting(E_ALL & ~E_NOTICE);
+  error_reporting(E_ALL & ~E_NOTICE);
   // deactivate displaying of errors
-  //ini_set('display_errors', 'Off');
+  ini_set('display_errors', 'Off');
   // activate php error logging
-  //ini_set('log_errors', 'On');
+  ini_set('log_errors', 'On');
   // log php errors there
-  //ini_set('error_log', '../login-script-php-errors.log');
+  ini_set('error_log', '../login-script-php-errors.log');
 
   /***** Settings for checkForm() function *****/
   // defines the html code that is concatenated with the error message, which the function returns

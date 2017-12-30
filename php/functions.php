@@ -1052,7 +1052,7 @@
   function twitter_getSignInButton() {
     global $twitter_auth;
 
-    return '<a href="' . $twitter_auth->getAuthUrl() . '">Sign in with Twitter</a>';
+    return '<a href="' . $twitter_auth->getAuthUrl() . '" class="mt-0">Sign in with Twitter</a>';
   }
 
   function twitter_login(string $verifier) {
@@ -1216,7 +1216,7 @@
   function twitter_getSignUpButton() {
     global $twitter_auth;
 
-    return '<a href="' . $twitter_auth->getAuthUrl() . '">Sign up with Twitter</a>';
+    return '<a href="' . $twitter_auth->getAuthUrl() . '" class="mt-0">Sign up with Twitter</a>';
   }
 
   function twitter_isInitPassword(int $user_id) {
