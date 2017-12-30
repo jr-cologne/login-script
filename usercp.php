@@ -1,8 +1,9 @@
 <?php
   // require all other files
-  require_once('includes/init.php');
-  require_once('includes/google/google.php');
-  require_once('includes/csrf.php');
+  require_once 'includes/init.php';
+  require_once 'includes/google/google.php';
+  require_once 'includes/twitter/twitter.php';
+  require_once 'includes/csrf.php';
 
   // set user as logged out
   $logged_in = [ 'status' => false, 'user_id' => null ];
@@ -10,6 +11,7 @@
   $response = null;
 
   $google_is_init_password = false;
+  $twitter_is_init_password = false;
 
   // logged in?
   if (checkLogin()) {
@@ -37,7 +39,22 @@
     // update_profile form submitted?
     if ($_POST['update_profile'] == 'Save changes') {
       // update profile and get response
-      $response = updateProfile(getUserId($logged_in['user_id'], 'google_id'), $user_data['username'], $user_data['email'], $_POST['new_username'], $_POST['new_email'], $_POST['old_password'], $_POST['new_password'], $google_is_init_password);
+      $response = updateProfile(getUserId($logged_in['user_id'], 'google_id'), $user_data['username'], $user_data['email'], $_POST['new_username'], $_POST['new_email'], $_POST['old_password'], $_POST['new_password'], [ 'google' => $google_is_init_password ]);
+    }
+  } else if (twitter_checkLogin()) {
+    // set user as logged in
+    $logged_in = [ 'status' => true, 'user_id' => $_SESSION['logged_in'] ];
+
+    // get username and email of logged in user
+    $user_data = getUserData($logged_in['user_id'], [ 'username', 'email' ], 'twitter');
+
+    // is the password still the initial one set when registering with Twitter?
+    $twitter_is_init_password = twitter_isInitPassword(getUserId($logged_in['user_id'], 'twitter_id'));
+
+    // update_profile form submitted?
+    if ($_POST['update_profile'] == 'Save changes') {
+      // update profile and get response
+      $response = updateProfile(getUserId($logged_in['user_id'], 'twitter_id'), $user_data['username'], $user_data['email'], $_POST['new_username'], $_POST['new_email'], $_POST['old_password'], $_POST['new_password'], [ 'twitter' => $twitter_is_init_password ]);
     }
   } else {
     // user isn't logged in, redirect user
@@ -66,6 +83,10 @@
       if ($google_is_init_password) {
         ?>
           <p>Your password is still the initial one since you registered with Google, right? Then just fill in "google" into the old password field and enter your wished new password, so that you are able to login with your username and password as well.</p>
+        <?php
+      } else if ($twitter_is_init_password) {
+        ?>
+          <p>Your password is still the initial one since you registered with Twitter, right? Then just fill in "twitter" into the old password field and enter your wished new password, so that you are able to login with your username and password as well.</p>
         <?php
       }
 

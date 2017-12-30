@@ -10,6 +10,7 @@ Before you get started, I would like to give you a few information about it. So 
 - Database, which supports PDO (e.g. MySQL)
 - [jr-cologne/db-class](https://github.com/jr-cologne/db-class) (version ^2.1)
 - [Google APIs Client Library for PHP](https://github.com/google/google-api-php-client) (version ^2.2)
+- [codebird-php](https://github.com/jublonet/codebird-php) (version ^3.1)
 
 You don't have any clue, what the symbols next to the versions mean? [Read this](https://getcomposer.org/doc/articles/versions.md)!
 
@@ -22,7 +23,8 @@ If you want to run the login script on your local machine or your own server, do
 3. Upload the files to your server via FTP or if you want to have it on your local machine, put the files inside your corresponding directory of your local server. Mostly the directory is called `htdocs`, `www` or something like that.
 4. Create a new database and then import the table `users`, by the SQL file inside the `php` directory, into the database.
 5. Open the file `php/config.php` in your editor and change the login settings for your database connection. Also, you can make some changes to the other settings, if you want to.
-6. Now you should be ready to start!
+6. Setup the social login/registration feature. ([More information on that here](https://github.com/jr-cologne/login-script#setting_up_social_login-registration))
+7. Now you should be ready to start!
 
 ### Installation of Dependencies
 
@@ -41,7 +43,7 @@ That should install all dependencies listed in [`composer.json`](https://github.
 Follow the instructions for the manual installation from the own documentations of the dependencies, but if you are not using Composer, always make sure to remove this line out of the file [`includes/init.php`](https://github.com/jr-cologne/login-script/blob/master/includes/init.php):
 
 ```php
-require_once('vendor/autoload.php');
+require_once 'vendor/autoload.php';
 ```
 
 For the *Google APIs Client Library* you can [read through this](https://github.com/google/google-api-php-client#download-the-release) and for the Database Class you can [follow this small documentation](https://github.com/jr-cologne/db-class#manual-installation).
@@ -49,14 +51,41 @@ For the *Google APIs Client Library* you can [read through this](https://github.
 After you followed the instructions over there and downloaded it, you just have to put the `google-api-php-client` folder with all files into your `vendor` folder. Finally, you must include the autoloader in the file [`includes/google/google.php`](https://github.com/jr-cologne/login-script/blob/master/includes/google/google.php):
 
 ```php
-require_once('vendor/google-api-php-client/vendor/autoload.php');
+require_once 'vendor/google-api-php-client/vendor/autoload.php';
 ```
 
 The same applies for the Database Class. You have to include the class into the file [`includes/db.php`](https://github.com/jr-cologne/login-script/blob/master/includes/db.php) like so:
 
 ```php
-require_once('vendor/db-class/DB.php');
+require_once 'vendor/db-class/DB.php';
 ```
+
+Furthermore, you need to download the [`codebird-php`](https://github.com/jublonet/codebird-php) library, put it into your vendor folder and include the file `codebird.php` in the file [`includes/twitter/twitter.php`](https://github.com/jr-cologne/login-script/blob/master/includes/twitter/twitter.php):
+
+```php
+require_once 'vendor/codebird-php/src/codebird.php';
+```
+
+### Setting up Social Login/Registration
+
+If you want to use the social login/registration feature, by which you can access your account via Google and Twitter with just one click, do this:
+
+For Google, just follow [this guide](https://developers.google.com/identity/sign-in/web/devconsole-project) and download your JSON file containing the API credentials. This file then has to be moved inside the folder `includes/google/` and after doing this you just set the `GOOGLE_AUTH_CONFIG_FILE` constant in the file `php/config.php` like so:
+
+```php
+const GOOGLE_AUTH_CONFIG_FILE = 'includes/google/your-google-api-credentials-file.json';
+```
+
+For Twitter, you have to create and set up an application under [apps.twitter.com](https://apps.twitter.com/). After this, create and save a file called `twitter-api-credentials.json` inside the folder `includes/twitter/` with the following content:
+
+```json
+{
+  "api_key": "xxx",
+  "api_secret": "xxx"
+}
+```
+
+Please make sure to replace `xxx` with your API keys from Twitter.
 
 
 If you have any trouble installing the login script and the dependencies, you found a bug or you have got a question, open up an Issue and I will try to help you.

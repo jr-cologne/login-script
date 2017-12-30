@@ -411,6 +411,10 @@
 			case 'google_id':
 				return $db->table(DB_TABLE)->select('id', [ 'google_id' => $identifier ])->retrieve('first')['id'];
 				break;
+
+      case 'twitter_id':
+        return $db->table(DB_TABLE)->select('id', [ 'twitter_id' => $identifier ])->retrieve('first')['id'];
+        break;
 		}
 	}
 
@@ -432,13 +436,15 @@
 
 		if ($login_type == 'google') {
 			return $db->table(DB_TABLE)->select($fields, [ 'google_id' => $user_id ])->retrieve('first');
-		} else {
+		} else if ($login_type == 'twitter') {
+      return $db->table(DB_TABLE)->select($fields, [ 'twitter_id' => $user_id ])->retrieve('first');
+    } else {
 			return $db->table(DB_TABLE)->select($fields, [ 'id' => $user_id ])->retrieve('first');
 		}
 	}
 
 	// update profile for a specific user
-	function updateProfile($user_id, string $username=null, string $email=null, string $new_username=null, string $new_email=null, string $old_password=null, string $new_password=null, bool $google_is_init_password=false) {
+	function updateProfile($user_id, string $username=null, string $email=null, string $new_username=null, string $new_email=null, string $old_password=null, string $new_password=null, array $social_is_init_password=[ 'google' => false, 'twitter' => false ]) {
 		// globalize database connection
 		global $db;
 
@@ -446,6 +452,9 @@
 			$response['msg'] = ERR_HTML_START . 'An error occured while saving your changes.' . ERR_HTML_END;
 			return $response;
 		}
+
+    $google_is_init_password = isset($social_is_init_password['google']) ?: false;
+    $twitter_is_init_password = isset($social_is_init_password['twitter']) ?: false;
 
 		// create response array
 		$response = ['success' => false, 'msg' => null];
@@ -549,6 +558,9 @@
             if ($google_is_init_password && strtolower($old_password) == 'google') {
               $old_password_correct = true;
               break;
+            } else if ($twitter_is_init_password && strtolower($old_password) == 'twitter') {
+              $old_password_correct = true;
+              break;
             }
 
 						// get hashed password from database
@@ -627,6 +639,9 @@
         if (in_array('password', $userdata_to_update) && strtolower($old_password) == 'google') {
           // set that account no longer has the initial google password
           google_setInitPasswordToFalse($user_id);
+        } else if (in_array('password', $userdata_to_update) && strtolower($old_password) == 'twitter') {
+          // set that account no longer has the initial twitter password
+          twitter_setInitPasswordToFalse($user_id);
         }
 
         // return response
@@ -883,7 +898,7 @@
 	}
 
 	function google_checkLogin() {
-		return !empty($_SESSION['access_token']);
+		return !empty($_SESSION['access_token']) && !empty($_SESSION['logged_in']);
 	}
 
 	function google_getSignInButton() {
@@ -897,7 +912,7 @@
 
 		$google_auth->logout($_SESSION['access_token']);
 
-		unset($_SESSION['access_token']);
+		unset($_SESSION['access_token'], $_SESSION['logged_in']);
 	}
 
 	function emailAssigned(string $email) {
@@ -958,20 +973,20 @@
               'google_init_password' => 1
 						]
 					);
-				}
-
-				// insert user into database
-				$registered = $db->table(DB_TABLE)->insert(
-					[
-					 	'username' => $google_email,
-					 	'email' => $google_email,
-					 	'password' => $password,
-					 	'verified' => 1,
-					 	'token' => '',
-					 	'google_id' => $google_id,
-            'google_init_password' => 1
-					]
-				);
+				} else {
+          // insert user into database
+          $registered = $db->table(DB_TABLE)->insert(
+            [
+              'username' => $google_email,
+              'email' => $google_email,
+              'password' => $password,
+              'verified' => 1,
+              'token' => '',
+              'google_id' => $google_id,
+              'google_init_password' => 1
+            ]
+          );
+        }
 
 				// has user successfully been registered?
 				if ($registered) {
@@ -1032,5 +1047,187 @@
     }
 
     return true;
+  }
+
+  function twitter_getSignInButton() {
+    global $twitter_auth;
+
+    return '<a href="' . $twitter_auth->getAuthUrl() . '" class="mt-0">Sign in with Twitter</a>';
+  }
+
+  function twitter_login(string $verifier) {
+    global $twitter_auth;
+    global $db;
+
+    // create response array
+    $response = [ 'success' => false, 'msg' => null ];
+
+    // check callback
+    $access_tokens = $twitter_auth->checkCallback($verifier);
+
+    // successfully logged in with Twitter?
+    if ( !empty($access_tokens['oauth_token']) && !empty($access_tokens['oauth_token_secret']) ) {
+      // get payload/data
+      $payload = $twitter_auth->getPayload();
+      $twitter_id = $payload['user_id'];
+      $twitter_email = $payload['email'];
+      $twitter_email_verified = true;
+
+      // account with that email already exists?
+      if (emailAssigned($twitter_email)) {
+        // account already associated with this twitter account?
+        $associated = $db->table(DB_TABLE)->select('twitter_id', [ 'email' => $twitter_email, 'twitter_id' => $twitter_id ])->retrieve('first');
+
+        if (!empty($associated)) {
+          // set user as logged in
+          $_SESSION['logged_in'] = $twitter_id;
+
+          $response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You are successfully logged in with Twitter. <a href="index.php">Now you can go to the restricted area</a>!' . ERR_HTML_END ];
+          return $response;
+        }
+
+        // store everything in database
+        $updated = $db->table(DB_TABLE)->update([ 'twitter_id' => $twitter_id ], [ 'email' => $twitter_email ]);
+
+        if ($updated) {
+          // set user as logged in
+          $_SESSION['logged_in'] = $twitter_id;
+
+          $response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You are successfully logged in with Twitter. <a href="index.php">Now you can go to the restricted area</a>!' . ERR_HTML_END ];
+        } else {
+          // logout user from twitter
+          twitter_logout();
+
+          $response['msg'] = ERR_HTML_START . 'Your login with Twitter failed. Please try again.' . ERR_HTML_END;
+        }
+      } else {
+        // logout user from Twitter
+        twitter_logout();
+
+        $response['msg'] = ERR_HTML_START . 'No account with the same email address as your Twitter account is existing. It is not possible to use an Twitter acccount with an unused email for the login, because then your account can not be matched to your Twitter account. If you do not care about that, you can <a href="register.php">register an new/seperate account</a> with your Twitter account. Otherwise you have to use an Twitter account, which email matches to the email of your account here.' . ERR_HTML_END;
+      }
+    } else {
+      $response['msg'] = ERR_HTML_START . 'Authentication with Twitter failed. Please try again.' . ERR_HTML_END;
+    }
+
+    return $response;
+  }
+
+  function twitter_checkLogin() {
+    return !empty($_SESSION['oauth_token']) && !empty($_SESSION['oauth_token_secret']) && !empty($_SESSION['logged_in']);
+  }
+
+  function twitter_logout() {
+    global $twitter_auth;
+
+    $twitter_auth->logout();
+
+    unset($_SESSION['oauth_token'], $_SESSION['oauth_token_secret'], $_SESSION['logged_in']);
+  }
+
+  function twitter_register(string $verifier) {
+    global $twitter_auth;
+    global $db;
+
+    // create response array
+    $response = ['success' => false, 'msg' => null];
+
+    // check callback
+    $access_tokens = $twitter_auth->checkCallback($verifier);
+
+    // successfully logged in with Twitter?
+    if ( !empty($access_tokens['oauth_token']) && !empty($access_tokens['oauth_token_secret']) ) {
+      // get payload/data
+      $payload = $twitter_auth->getPayload();
+      $twitter_id = $payload['user_id'];
+      $twitter_email = $payload['email'];
+      $twitter_email_verified = true;
+
+      // account with that email does not already exist?
+      if (!emailAssigned($twitter_email)) {
+        // create password
+        $password = bin2hex(random_bytes(16));
+
+        // hash password for storing it in database
+        $password = password_hash($password . PEPPER, PASSWORD_DEFAULT, PW_HASH_OPTIONS);
+
+        if (!$twitter_email_verified) {
+          // create token for email verification
+          $token = bin2hex(random_bytes(16));
+
+          // insert user into database
+          $registered = $db->table(DB_TABLE)->insert(
+            [
+              'username' => $twitter_email,
+              'email' => $twitter_email,
+              'password' => $password,
+              'token' => $token,
+              'twitter_id' => $twitter_id,
+              'twitter_init_password' => 1
+            ]
+          );
+        } else {
+          // insert user into database
+          $registered = $db->table(DB_TABLE)->insert(
+            [
+              'username' => $twitter_email,
+              'email' => $twitter_email,
+              'password' => $password,
+              'verified' => 1,
+              'token' => '',
+              'twitter_id' => $twitter_id,
+              'twitter_init_password' => 1
+            ]
+          );
+        }
+
+        // has user successfully been registered?
+        if ($registered) {
+          // should a verification mail be sent?
+          if (!$twitter_email_verified) {
+            // send email for verification
+            $verification_mail = sendVerificationMail($twitter_email, $twitter_email, $token);
+
+            // verification mail sent successfully?
+            if ($verification_mail) {
+              $response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You have successfully been registered with Twitter and an email to verify your email address has been sent to your inbox! Because you have registered with Twitter, we have set your username to your email address and generated a password for you. You can change both things in your control panel, when your are logged in.' . ERR_HTML_END ];
+              return $response;
+            } else {
+              $response = [ 'success' => false, 'msg' => ERR_HTML_START . 'You have successfully been registered with Twitter, but unfortunately an error occured when trying to send an email to your inbox in order to verify your email address! Please try again and <a href="verify-email.php?resend=true&id=' . getUserId($twitter_email) . '">order a new verification mail</a>. Because you have registered with Twitter, we have set your username to your email address and generated a password for you. You can change both things in your control panel, when your are logged in.' . ERR_HTML_END ];
+              return $response;
+            }
+          }
+
+          $response = [ 'success' => true, 'msg' => ERR_HTML_START . 'You have successfully been registered with Twitter. Because you have registered with Twitter, we have set your username to your email address and generated a password for you. You can change both things in your control panel, when your are logged in. For the first time, you have to log in with Twitter.' . ERR_HTML_END ];
+        } else {  // registration failed
+          // return response
+          $response['msg'] = ERR_HTML_START . 'Registration with Twitter failed. Please try again.' . ERR_HTML_END;
+        }
+      } else {
+        $response['msg'] = ERR_HTML_START . 'There is already an account with the same email address your Twitter account is using. If you want to connect your Twitter account to the existing account with that email address here, you can simply <a href="login.php">log in to your existing account with Twitter</a>. Otherwise, if you are trying to create an new/seperate account, just use an other Twitter account, which email address is not yet used here in order to register.' . ERR_HTML_END;
+      }
+    } else {
+      $response['msg'] = ERR_HTML_START . 'Authentication with Twitter failed. Please try again.' . ERR_HTML_END;
+    }
+
+    return $response;
+  }
+
+  function twitter_getSignUpButton() {
+    global $twitter_auth;
+
+    return '<a href="' . $twitter_auth->getAuthUrl() . '" class="mt-0">Sign up with Twitter</a>';
+  }
+
+  function twitter_isInitPassword(int $user_id) {
+    global $db;
+
+    return (bool) $db->table(DB_TABLE)->select('twitter_init_password', [ 'id' => $user_id ])->retrieve('first')['twitter_init_password'];
+  }
+
+  function twitter_setInitPasswordToFalse(int $user_id) {
+    global $db;
+
+    return $db->table(DB_TABLE)->update([ 'twitter_init_password' => 0 ], [ 'id' => $user_id ]);
   }
 ?>

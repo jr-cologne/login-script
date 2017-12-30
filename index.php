@@ -1,20 +1,23 @@
 <?php
 	// require all files
-	require_once('includes/init.php');
-	require_once('includes/google/google.php');
+	require_once 'includes/init.php';
+	require_once 'includes/google/google.php';
+  require_once 'includes/twitter/twitter.php';
 
 	// set user as logged out
 	$logged_in = [ 'status' => false, 'user_id' => null ];
 
 	// logged in?
-	if (checkLogin() || google_checkLogin()) {
+	if (checkLogin() || google_checkLogin() || twitter_checkLogin()) {
 		// set user as logged in
 		$logged_in = [ 'status' => true, 'user_id' => $_SESSION['logged_in'] ];
 
 		// get username and email of logged in user
 		if (google_checkLogin()) {
 			$user_data = getUserData($logged_in['user_id'], [ 'username', 'email' ], 'google');
-		} else {
+		} else if (twitter_checkLogin()) {
+      $user_data = getUserData($logged_in['user_id'], [ 'username', 'email' ], 'twitter');
+    } else {
 			$user_data = getUserData($logged_in['user_id'], [ 'username', 'email' ]);
 		}
 	}

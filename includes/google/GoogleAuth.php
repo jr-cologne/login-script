@@ -6,14 +6,14 @@
       $this->client = $google_client;
 
       if ($this->client) {
-        $this->client->setAuthConfig(AUTH_CONFIG_FILE);
+        $this->client->setAuthConfig(GOOGLE_AUTH_CONFIG_FILE);
         $this->client->setIncludeGrantedScopes(true);
-        $this->client->addScope(SCOPES);
+        $this->client->addScope(GOOGLE_SCOPES);
         
         if ($auth_type == 'register') {
-          $this->client->setRedirectUri(REDIRECT_URI_REGISTER);
+          $this->client->setRedirectUri(GOOGLE_REDIRECT_URI_REGISTER);
         } else {
-          $this->client->setRedirectUri(REDIRECT_URI);
+          $this->client->setRedirectUri(GOOGLE_REDIRECT_URI);
         }
       }
     }
