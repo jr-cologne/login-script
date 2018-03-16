@@ -4,7 +4,7 @@ Welcome to this project, a simple database-based login script with PHP.
 
 Before you get started, I would like to give you a few information about it. So please take a minute and read this small documentation carefully.
 
-**Attention:**: Development and support of version 1 of this login script has ended.
+**Attention**: Development and support of version 1 of this login script has ended.
 
 ## Requirements/Dependencies
 
