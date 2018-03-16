@@ -49,7 +49,3 @@ Temporary Items
 # Exclude Composer stuff
 vendor
 composer.lock
-
-# Exclude API Credentials
-includes/google/*.json
-includes/twitter/*.json
