@@ -1,0 +1,16 @@
+{
+  "require": {
+    "php": ">=7.0",
+    "jr-cologne/db-class": "^2.1",
+    "google/apiclient": "^2.2",
+    "jublonet/codebird-php": "^3.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "LoginScript\\": "app/"
+    },
+    "files": [
+      "app/config.php"
+    ]
+  }
+}
