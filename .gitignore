@@ -50,6 +50,8 @@ Temporary Items
 vendor
 composer.lock
 
-# Exclude API Credentials
-includes/google/*.json
-includes/twitter/*.json
+# Exclude todo.md
+todo.md
+
+# Exclude storage
+storage

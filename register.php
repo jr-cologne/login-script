@@ -1,109 +1,82 @@
 <?php
-  // set Google/Twitter auth type
-  $auth_type = 'register';
+  require_once 'app/init.php';
 
-  // require all files
-  require_once 'includes/init.php';
-  require_once 'includes/google/google.php';
-  require_once 'includes/twitter/twitter.php';
-  require_once 'includes/csrf.php';
+  use LoginScript\{
+    Session\Session,
+    Config\Config,
+    CSRF\CSRF,
+    Google\Auth\GoogleAuth,
+    Twitter\Auth\TwitterAuth
+  };
 
-  // user logged in?
-  if (checkLogin() || google_checkLogin() || twitter_checkLogin()) {
-    // redirect user to restricted area
-    header('Location: index.php');
-  }
+  $controller = $app->controller('register');
 
-  // set response
-  $response = null;
+  $data = $controller->getResponseData(Session::get('register_data'));
+  Session::delete('register_data');
 
-  if (!empty($_SESSION['response'])) {
-    $response = $_SESSION['response'];
-    unset($_SESSION['response']);
-  }
-
-  // register form submitted?
-	if ($_POST['register'] == 'Register') {
-    // register user and get response
-		$response = register($_POST['username'], $_POST['email'], $_POST['password']);
-	} else if (!empty($_GET['code'])) {
-    $response = google_register($_GET['code']);
-  }
+  $errors = Session::get(Config::get('errors/session_name'));
+  Session::delete(Config::get('errors/session_name'));
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
   <title>Restricted Area - Register</title>
-  <!-- Include Head -->
-  <?php require_once 'includes/sections/head.html'; ?>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
 </head>
 <body>
-  <header>
-    <h1>Restricted Area - Register</h1>
-    <h2>Welcome to the the restricted area!</h2>
-  </header>
+  <div class="container">
+    <header>
+      <h1>Restricted Area - Register</h1>
+      <h2>Welcome to the the restricted area!</h2>
+    </header>
 
-  <main>
-    <?php
-      // display that only if the registration failed or if the registration form wasn't submitted
-      if (!$response['success']) {
-        ?>
-        <p>Register for getting access to the restricted area!</p>
-        <?php
-      }
+    <main>
+      <a href="index.php">Back to the homepage</a>
 
-      // if a response exists, display the message
-    	if (!empty($response)) {
-        echo $response['msg'];
-      }
+      <p>Please register via username, email and password ...</p>
 
-      // was the registration successfully?
-      if ($response['success']) {
-        // display additional response
-        echo ERR_HTML_START . 'Now go ahead and <a href="login.php">log in</a> to your account. Have fun!' . ERR_HTML_END;
-      } else {  // registration failed
-        // display registration form etc.
-        ?>
-        <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
-          <div class="field_wrap">
-            <label for="username">Your Username:</label>
-            <input type="text" name="username" id="username" value="<?php if (!empty($_POST['username'])) { echo clean($_POST['username']); } ?>">
-          </div>
-          <div class="field_wrap">
-            <label for="email">Your Email:</label>
-            <input type="text" name="email" id="email" value="<?php if (!empty($_POST['email'])) { echo clean($_POST['email']); } ?>">
-          </div>
-          <div class="field_wrap">
-            <label for="password">Your Password:</label>
-            <input type="password" name="password" id="password">
-          </div>
-          <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>">
-          <input type="submit" name="register" value="Register">
-        </form>
+      <form action="" method="post" autocomplete="off">
 
-        <?php
-          // not logged in with google?
-          if (!google_checkLogin()) { // display google sign in button
-            echo google_getSignUpButton();
-          }
+        <?php echo !empty($errors['success']) ? '<div class="alert alert-success" role="alert"><p class="mb-0">' .  $errors['success'] . '</p></div>' : '' ?>
 
-          // not logged in with twitter?
-          if (!twitter_checkLogin()) {  // display twitter sign up button
-            echo twitter_getSignUpButton();
-          }
-        ?>
+        <?php echo !empty($errors['failed']) ? '<div class="alert alert-danger" role="alert"><p class="mb-0">' .  $errors['failed'] . '</p></div>' : '' ?>
 
-        <p>Do you already have an account? <a href="login.php">Log in here!</a></p>
-        <?php
-      }
-    ?>
-  </main>
+        <?php echo !empty($errors['username'][0]) ? '<div class="alert alert-danger" role="alert"><p class="mb-0">' . $errors['username'][0] . '</p></div>' : '' ?>
+        <div class="form-group">
+          <label for="username">Your Username:</label>
+          <input type="text" name="username" id="username" value="<?php echo $data['username'] ?? ''; ?>" class="form-control">
+        </div>
 
-  <!-- Include Footer -->
-  <?php require_once 'includes/sections/footer.html'; ?>
+        <?php echo !empty($errors['email'][0]) ? '<div class="alert alert-danger" role="alert"><p class="mb-0">' . $errors['email'][0] . '</p></div>' : '' ?>
+        <div class="form-group">
+          <label for="email">Your Email:</label>
+          <input type="email" name="email" id="email" value="<?php echo $data['email'] ?? ''; ?>" class="form-control">
+        </div>
 
-  <!-- Include Foot -->
-  <?php require_once 'includes/sections/foot.html'; ?>
+        <?php echo !empty($errors['password'][0]) ? '<div class="alert alert-danger" role="alert"><p class="mb-0">' . $errors['password'][0] . '</p></div>' : '' ?>
+        <div class="form-group">
+          <label for="password">Your Password:</label>
+          <input type="password" name="password" id="password" class="form-control">
+        </div>
+
+        <input type="hidden" name="csrf_token" value="<?php echo CSRF::getToken(); ?>">
+
+        <input type="submit" name="register" value="Register" class="btn btn-primary">
+      </form>
+
+      <p>... or choose one of the following services:</p>
+
+      <a href="<?php echo GoogleAuth::getAuthUrl('register'); ?>" class="btn">Register with Google</a>
+
+      <a href="<?php echo TwitterAuth::getAuthUrl('register'); ?>" class="btn">Register with Twitter</a>
+
+      <p>You already have an account? <a href="login.php">Log in here!</a></p>
+    </main>
+  </div>
 </body>
 </html>

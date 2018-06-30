@@ -1,81 +1,68 @@
 <?php
-	// require all files
-	require_once 'includes/init.php';
-	require_once 'includes/google/google.php';
-  require_once 'includes/twitter/twitter.php';
+  require_once 'app/init.php';
 
-	// set user as logged out
-	$logged_in = [ 'status' => false, 'user_id' => null ];
+  use LoginScript\{
+    Session\Session,
+    Config\Config
+  };
 
-	// logged in?
-	if (checkLogin() || google_checkLogin() || twitter_checkLogin()) {
-		// set user as logged in
-		$logged_in = [ 'status' => true, 'user_id' => $_SESSION['logged_in'] ];
+  $controller = $app->controller('home');
 
-		// get username and email of logged in user
-		if (google_checkLogin()) {
-			$user_data = getUserData($logged_in['user_id'], [ 'username', 'email' ], 'google');
-		} else if (twitter_checkLogin()) {
-      $user_data = getUserData($logged_in['user_id'], [ 'username', 'email' ], 'twitter');
-    } else {
-			$user_data = getUserData($logged_in['user_id'], [ 'username', 'email' ]);
-		}
-	}
+  $guest = $controller->guest();
+
+  if ($guest) {
+    $errors = Session::get(Config::get('errors/session_name'));
+    Session::delete(Config::get('errors/session_name'));
+  }
+
+  if (!$guest) {
+    $user_data = $controller->getResponseData(Session::get('user_data'));
+    Session::delete('user_data');
+  }
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Restricted Area</title>
-	<!-- Include Head -->
-  <?php require_once 'includes/sections/head.html'; ?>
+  <title>Restricted Area - Home</title>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
 </head>
 <body>
-	<header>
-    <h1>Restricted Area</h1>
-    <h2>Welcome to the the restricted area!</h2>
-  </header>
+  <div class="container">
+    <header>
+      <h1>Restricted Area - Home</h1>
+      <h2>Welcome to the the restricted area!</h2>
+    </header>
 
-	<main>
-		<?php
-			// display message and logout button if user is logged in
-			if ($logged_in['status']) {
-				?>
-					<p><strong>You are in the restricted area! Congratulation!</strong></p>
+    <main>
+      <?php if (!$guest): ?>
+        <p><strong>You are in the restricted area! Congratulations!</strong></p>
 
-					<p>You are logged in as:</p>
-					
-					<?php // also display user information, if we have any
-						if ( !empty($user_data['username']) && !empty($user_data['email']) ) {
-					?>
-						<div id="user_info">
-							<ul>
-								<li><?php echo clean($user_data['username']); ?></li>
-								<li><?php echo clean($user_data['email'], 'email'); ?></li>
-							</ul>
-							
-							<a href="usercp.php">Edit Profile</a>
-						</div>
-					<?php
-						}
-					?>
+        <p>You are logged in as:</p>
 
-					<a href="logout.php">Log out</a>
+        <?php if (!empty($user_data['username']) && !empty($user_data['email'])): ?>
+          <div id="user_info">
+            <ul>
+              <li><?php echo $user_data['username']; ?></li>
+              <li><?php echo $user_data['email']; ?></li>
+            </ul>
+            
+            <a href="profile.php">Edit profile</a>
+          </div>
+        <?php endif; ?>
 
-				<?php
-			} else {	// user isn't logged in
-				// display message for none registered or logged in users
-				?>
-				<p>You want to have access to it? Then just go ahead and <a href="login.php">log in</a> or <a href="register.php">register</a>, if you don't already have an account!</p>
-				<?php
-			}
-		?>
-	</main>
+        <a href="logout.php">Log out</a>
+      <?php else: ?>
+        <?php echo !empty($errors['success']) ? '<div class="alert alert-success" role="alert"><p class="mb-0">' .  $errors['success'] . '</p></div>' : '' ?>
 
-	<!-- Include Footer -->
-  <?php require_once 'includes/sections/footer.html'; ?>
-
-	<!-- Include Foot -->
-  <?php require_once 'includes/sections/foot.html'; ?>
+        <p>You want to have access to the restricted area?<p>
+        <p>Then just go ahead and <a href="login.php">log in to your account</a> or <a href="register.php">register</a> if you don't already have an account!</p>
+      <?php endif; ?>
+    </main>
+  </div>
 </body>
 </html>
