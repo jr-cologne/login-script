@@ -53,7 +53,7 @@ $GLOBALS['config'] = [
   ],
   'social_auth' => [
     'google' => [
-      'config_file' => 'storage/social_auth/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json',
+      'config_file' => Env::get('GOOGLE_CONFIG') ?? 'storage/social_auth/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json',
       'scopes' => 'email',
       'redirect_uri' => [
         'login' => Env::get('GOOGLE_REDIRECT_URI_LOGIN') ?? 'http://localhost:8080/GitHub/login-script/google_login.php',
@@ -65,7 +65,7 @@ $GLOBALS['config'] = [
       ]
     ],
     'twitter' => [
-      'config_file' => 'storage/social_auth/twitter/twitter-api-credentials.json',
+      'config_file' => Env::get('TWITTER_CONFIG') ??  'storage/social_auth/twitter/twitter-api-credentials.json',
       'redirect_uri' => [
         'login' => Env::get('TWITTER_REDIRECT_URI_LOGIN') ?? 'http://localhost:8080/GitHub/login-script/twitter_login.php',
         'register' => Env::get('TWITTER_REDIRECT_URI_REGISTER') ?? 'http://localhost:8080/GitHub/login-script/twitter_register.php'

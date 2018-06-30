@@ -83,7 +83,13 @@ class TwitterAuth {
   }
 
   protected function getApiKeys() : array {
-    $api_keys = json_decode(file_get_contents(Config::get('social_auth/twitter/config_file'), true), true);
+    $config = Config::get('social_auth/twitter/config_file');
+
+    if (is_string($config) && !file_exists($config)) {
+      $api_keys = json_decode($config, true);
+    } else {
+      $api_keys = json_decode(file_get_contents($config, true), true);
+    }
 
     $api_key = $api_keys['api_key'] ?? null;
     $api_secret = $api_keys['api_secret'] ?? null;
