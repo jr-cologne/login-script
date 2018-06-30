@@ -1,12 +1,16 @@
 <?php
 
+use LoginScript\Env\Env;
+
+$db_url = parse_url(Env::get('CLEARDB_DATABASE_URL'));
+
 $GLOBALS['config'] = [
   'database' => [
     'type' => 'mysql',
-    'name' => 'login-script',
-    'host' => '127.0.0.1',
-    'user' => 'root',
-    'password' => 'root',
+    'name' => substr($db_url['path'], 1) ?? 'login-script',
+    'host' => $db_url['host'] ?? '127.0.0.1',
+    'user' => $db_url['user'] ?? 'root',
+    'password' => $db_url['pass'] ?? 'root',
     'table' => 'users'
   ],
   'csrf' => [
@@ -25,7 +29,7 @@ $GLOBALS['config'] = [
   'password' => [
     'algorithm' => 'password_argon2i',
     'options' => [
-      'pepper' => 'S3Aze&H!qa8heXEka+UP',
+      'pepper' => Env::get('PEPPER') ?? 'S3Aze&H!qa8heXEka+UP',
       'memory_cost' => 1<<17,
       'time_cost' => 4,
       'threads' => 2,
@@ -33,7 +37,7 @@ $GLOBALS['config'] = [
   ],
   'email' => [
     'token_length' => 32,
-    'url' => 'http://localhost:8080/verify.php',
+    'url' => Env::get('EMAIL_URL') ?? 'http://localhost:8080/verify.php',
     'from' => 'kontakt@jr-cologne.de',
     'subject' => 'Welcome to the restricted area - Please verify your email!',
     'message' => 'Hello :username!' . PHP_EOL . PHP_EOL .
@@ -52,8 +56,8 @@ $GLOBALS['config'] = [
       'config_file' => 'storage/social_auth/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json',
       'scopes' => 'email',
       'redirect_uri' => [
-        'login' => 'http://localhost:8080/GitHub/login-script/google_login.php',
-        'register' => 'http://localhost:8080/GitHub/login-script/google_register.php'
+        'login' => Env::get('GOOGLE_REDIRECT_URI_LOGIN') ?? 'http://localhost:8080/GitHub/login-script/google_login.php',
+        'register' => Env::get('GOOGLE_REDIRECT_URI_REGISTER') ?? 'http://localhost:8080/GitHub/login-script/google_register.php'
       ],
       'registration' => [
         'username_length' => 8,
@@ -63,8 +67,8 @@ $GLOBALS['config'] = [
     'twitter' => [
       'config_file' => 'storage/social_auth/twitter/twitter-api-credentials.json',
       'redirect_uri' => [
-        'login' => 'http://localhost:8080/GitHub/login-script/twitter_login.php',
-        'register' => 'http://localhost:8080/GitHub/login-script/twitter_register.php'
+        'login' => Env::get('TWITTER_REDIRECT_URI_LOGIN') ?? 'http://localhost:8080/GitHub/login-script/twitter_login.php',
+        'register' => Env::get('TWITTER_REDIRECT_URI_REGISTER') ?? 'http://localhost:8080/GitHub/login-script/twitter_register.php'
       ],
       'registration' => [
         'username_length' => 8,
@@ -74,5 +78,5 @@ $GLOBALS['config'] = [
   ],
   'dependencies' => [
     'db' => 'JRCologne\Utils\Database\DB'
-  ],
+  ]
 ];
