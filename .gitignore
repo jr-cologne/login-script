@@ -48,7 +48,6 @@ Temporary Items
 
 # Exclude Composer stuff
 vendor
-composer.lock
 
 # Exclude todo.md
 todo.md
