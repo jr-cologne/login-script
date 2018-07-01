@@ -53,7 +53,7 @@ $GLOBALS['config'] = [
   ],
   'social_auth' => [
     'google' => [
-      'config_file' => Env::get('GOOGLE_CONFIG') ?? 'storage/social_auth/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json',
+      'config_file' => json_decode(Env::get('GOOGLE_CONFIG'), true) ?? 'storage/social_auth/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json',
       'scopes' => 'email',
       'redirect_uri' => [
         'login' => Env::get('GOOGLE_REDIRECT_URI_LOGIN') ?? 'http://localhost:8080/GitHub/login-script/google_login.php',
