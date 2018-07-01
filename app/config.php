@@ -27,12 +27,10 @@ $GLOBALS['config'] = [
     ]
   ],
   'password' => [
-    'algorithm' => 'password_argon2i',
+    'algorithm' => 'bcrypt',
     'options' => [
       'pepper' => Env::get('PEPPER') ?? 'S3Aze&H!qa8heXEka+UP',
-      'memory_cost' => 1<<17,
-      'time_cost' => 4,
-      'threads' => 2,
+      'cost' => 12
     ]
   ],
   'email' => [
