@@ -27,7 +27,7 @@ $GLOBALS['config'] = [
     ]
   ],
   'password' => [
-    'algorithm' => 'bcrypt',
+    'algorithm' => 'password_bcrypt',
     'options' => [
       'pepper' => Env::get('PEPPER') ?? 'S3Aze&H!qa8heXEka+UP',
       'cost' => 12
