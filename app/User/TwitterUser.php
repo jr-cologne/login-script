@@ -136,10 +136,16 @@ class TwitterUser extends BaseUser {
     $associated_user = $this->twitterAccountAssociated($twitter_id, $twitter_email);
 
     if ( !$associated_user && !$associated_user_without_email_check ) {
-      $updated = $this->db->table($this->table)->update([
+      $update_data = [
         'twitter_id' => $twitter_id,
         'verified' => (int) $twitter_email_verified
-      ], [
+      ];
+
+      if ($twitter_email_verified) {
+        $update_data['token'] = '';
+      }
+
+      $updated = $this->db->table($this->table)->update($update_data, [
         'email' => $twitter_email
       ]);
 
