@@ -2,12 +2,16 @@
 
 use LoginScript\Env\Env;
 
-$db_url = parse_url(Env::get('CLEARDB_DATABASE_URL'));
+$db_url = Env::get('CLEARDB_DATABASE_URL');
+
+if ($db_url) {
+  $db_url = parse_url($db_url);
+}
 
 $GLOBALS['config'] = [
   'database' => [
     'type' => 'mysql',
-    'name' => substr($db_url['path'], 1) ?? 'login-script',
+    'name' => substr($db_url['path'], 1) ?: 'login-script',
     'host' => $db_url['host'] ?? '127.0.0.1',
     'user' => $db_url['user'] ?? 'root',
     'password' => $db_url['pass'] ?? 'root',
@@ -63,7 +67,7 @@ $GLOBALS['config'] = [
       ]
     ],
     'twitter' => [
-      'config_file' => Env::get('TWITTER_CONFIG') ??  'storage/social_auth/twitter/twitter-api-credentials.json',
+      'config_file' => Env::get('TWITTER_CONFIG') ?? 'storage/social_auth/twitter/twitter-api-credentials.json',
       'redirect_uri' => [
         'login' => Env::get('TWITTER_REDIRECT_URI_LOGIN') ?? 'http://localhost:8080/GitHub/login-script/twitter_login.php',
         'register' => Env::get('TWITTER_REDIRECT_URI_REGISTER') ?? 'http://localhost:8080/GitHub/login-script/twitter_register.php'
@@ -72,6 +76,11 @@ $GLOBALS['config'] = [
         'username_length' => 8,
         'password_length' => 16
       ]
+    ]
+  ],
+  'error_handling' => [
+    'bugsnag' => [
+      'config_file' => Env::get('BUGSNAG_CONFIG') ?? 'storage/error_handling/bugsnag/bugsnag-api-credentials.json',
     ]
   ],
   'dependencies' => [

@@ -6,16 +6,16 @@ use LoginScript\Env\Exception\EnvException;
 
 class Env {
 
-  protected $throw_exception = false;
+  protected static $throw_exception = false;
 
-  public static function get(string $varname) : string {
+  public static function get(string $varname) {
     $env = getenv($varname);
 
-    if (!$env && $this->throw_exception) {
+    if (!$env && self::$throw_exception) {
       throw new EnvException('Invalid/Unknown environment variable');
     }
 
-    return $env ?? '';
+    return $env ?: null;
   }
 
   public static function getAll() : array {
