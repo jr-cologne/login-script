@@ -2,9 +2,15 @@
 
 require_once 'vendor/autoload.php';
 
-use LoginScript\Core\App as LoginScript;
+use LoginScript\{
+  Core\App as LoginScript,
+  ErrorHandling\ErrorHandler
+};
 
 use JRCologne\Utils\Database\{ DB, QueryBuilder };
+
+// init error handling
+$error_handler = new ErrorHandler;
 
 // set dependencies and configs
 $app = new LoginScript([

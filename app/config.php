@@ -78,6 +78,11 @@ $GLOBALS['config'] = [
       ]
     ]
   ],
+  'error_handling' => [
+    'bugsnag' => [
+      'config_file' => Env::get('BUGSNAG_CONFIG') ?? 'storage/error_handling/bugsnag/bugsnag-api-credentials.json',
+    ]
+  ],
   'dependencies' => [
     'db' => 'JRCologne\Utils\Database\DB'
   ]

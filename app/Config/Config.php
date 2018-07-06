@@ -13,14 +13,18 @@ class Config {
   }
 
   public static function get(string $path, bool $throw_exception = true) {
-    $config = self::$config;
+    $config = self::$config ?: $GLOBALS['config'];
+
+    if (!$config) {
+      throw new ConfigException('No config specified');
+    }
 
     foreach (explode('/', $path) as $node) {
       if (isset($config[$node])) {
         $config = $config[$node];
       } else {
         if ($throw_exception) {
-          throw new ConfigException('Invalid/Unknown config', 1);
+          throw new ConfigException('Invalid/Unknown config');
         } else {
           return null;
         }
