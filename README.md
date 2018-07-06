@@ -8,7 +8,8 @@ A simple object-oriented and database-based login script with PHP.
 - Database, which supports PDO (e.g. MySQL)
 - [jr-cologne/db-class](https://github.com/jr-cologne/db-class) (version ^2.1)
 - [Google APIs Client Library for PHP](https://github.com/google/google-api-php-client) (version ^2.2)
-- [codebird-php](https://github.com/jublonet/codebird-php) (version ^3.1)
+- [Codebird Twitter API Library](https://github.com/jublonet/codebird-php) (version ^3.1)
+- [Bugsnag PHP Library](https://github.com/bugsnag/bugsnag-php) (version ^3.14)
 
 ## Important Info
 
