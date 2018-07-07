@@ -4,7 +4,8 @@
     "jr-cologne/db-class": "^2.1",
     "google/apiclient": "^2.2",
     "jublonet/codebird-php": "^3.1",
-    "bugsnag/bugsnag": "^3.14"
+    "bugsnag/bugsnag": "^3.14",
+    "swiftmailer/swiftmailer": "^6.1"
   },
   "autoload": {
     "psr-4": {

@@ -4,7 +4,8 @@ namespace LoginScript\Core;
 
 use LoginScript\{
   Core\Exception\AppException,
-  Config\Config, Session\Session,
+  Config\Config,
+  Session\Session,
   Controllers\Controller
 };
 

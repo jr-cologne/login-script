@@ -381,10 +381,10 @@ abstract class BaseUser {
 
     $message = new Message(Config::get('email/message'), [
       'username' => $username,
-      'url' => Config::get('email/url') . "?token={ $token }&email={ $email }"
+      'url' => Config::get('email/url') . "?token={$token}&email={$email}"
     ]);
 
-    $mail = new Mail($email, Config::get('email/from'), Config::get('email/subject'), $message->getMessage());
+    $mail = new Mail(Config::get('email/from'), $email, Config::get('email/subject'), $message->getMessage());
 
     return $mail->sent();
   }

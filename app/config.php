@@ -39,8 +39,9 @@ $GLOBALS['config'] = [
   ],
   'email' => [
     'token_length' => 32,
-    'url' => Env::get('EMAIL_URL') ?? 'http://localhost:8080/verify.php',
-    'from' => 'kontakt@jr-cologne.de',
+    'smtp_config_file' => Env::get('SMTP_CONFIG') ?? 'storage/mail/smtp/smtp-server-credentials.json',
+    'url' => Env::get('EMAIL_URL') ?? 'http://localhost:8080/GitHub/login-script/verify.php',
+    'from' => 'habichvergessen40@gmail.com',
     'subject' => 'Welcome to the restricted area - Please verify your email!',
     'message' => 'Hello :username!' . PHP_EOL . PHP_EOL .
                  'Welcome to the restricted area! You have to verify your email before you can access the restricted area.' . PHP_EOL .
@@ -84,6 +85,7 @@ $GLOBALS['config'] = [
     ]
   ],
   'dependencies' => [
-    'db' => 'JRCologne\Utils\Database\DB'
+    'db' => 'JRCologne\Utils\Database\DB',
+    'swift_mailer' => 'Swift_Mailer',
   ]
 ];

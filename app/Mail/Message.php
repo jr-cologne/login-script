@@ -16,6 +16,8 @@ class Message {
 
   protected function createMessage(string $text, array $replacements) : string {
     foreach ($replacements as $placeholder => $replacement) {
+      unset($replacements[$placeholder]);
+
       $replacements[':' . $placeholder] = $replacement;
     }
 

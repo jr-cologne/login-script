@@ -2,54 +2,79 @@
 
 namespace LoginScript\Mail;
 
+use LoginScript\Config\Config;
+
+use \Swift_SmtpTransport;
+use \Swift_Mailer;
+use \Swift_Message;
+
 class Mail {
 
-  protected $to;
-  protected $from;
-  protected $subject;
+  protected $client;
+
   protected $message;
-  protected $headers;
+
   protected $sent = false;
 
-  public function __construct(string $to, string $from, string $subject, string $message, array $headers = []) {
-    $this->to = $to;
-    $this->from = $from;
-    $this->subject = $this->getSubject($subject);
-    $this->message = $message;
+  public function __construct(string $from, string $to, string $subject, string $message) {
+    $this->initMailClient(Config::get('email/smtp_config_file'));
 
-    if ($headers) {
-      $this->headers = $this->getHeaders($headers);
-    } else {
-      $this->headers = $this->getHeaders();
-    }
-    
+    $this->message = $this->getMessage(compact('from', 'to', 'subject', 'message'));
+
     $this->sent = $this->sendMail();
   }
 
-  public function sent() {
+  public function sent() : bool {
     return $this->sent;
   }
 
-  protected function getSubject(string $subject) {
-    return '=?UTF-8?B?' . base64_encode($subject) . '?=';
-  }
-
-  protected function getHeaders(array $custom_headers = []) {
-    if ($custom_headers) {
-      return implode("\r\n", $custom_headers);
+  protected function initMailClient(string $config) {
+    if (is_string($config) && !file_exists($config)) {
+      $config = json_decode($config, true);
+    } else {
+      $config = json_decode(file_get_contents($config, true), true);
     }
 
-    return implode("\r\n", [
-      'MIME-Version: 1.0',
-      'Content-type: text/plain; charset=utf-8',
-      "From: { $this->from }",
-      "Reply-To: { $this->from }",
-      "Subject: { $this->subject }"
-    ]);
+    $smtp_server = $config['smtp_server'] ?? null;
+    $smtp_port = $config['smtp_port'] ?? null;
+    $smtp_encryption = $config['smtp_encryption'] ?? null;
+    $smtp_username = $config['smtp_username'] ?? null;
+    $smtp_password = $config['smtp_password'] ?? null;
+
+    if ( !$smtp_server || !$smtp_port || !$smtp_encryption || !$smtp_username || !$smtp_password ) {
+      throw new MailException('Invalid/Missing mail configs');
+    }
+
+    $transport = (new Swift_SmtpTransport($smtp_server, $smtp_port))
+      ->setEncryption($smtp_encryption)
+      ->setUsername($smtp_username)
+      ->setPassword($smtp_password);
+
+    $this->client = new Swift_Mailer($transport);
   }
 
-  protected function sendMail() {
-    return mail($this->to, $this->subject, $this->message, $this->headers);
+  protected function getMessage(array $settings) {
+    $from = $settings['from'] ?? null;
+    $to = $settings['to'] ?? null;
+    $subject = $settings['subject'] ?? null;
+    $body = $settings['message'] ?? null;
+
+    if ( !$from || !$to || !$subject || !$body ) {
+      throw new MailClientException('Invalid/Missing message settings');
+    }
+
+    return (new Swift_Message($subject))
+      ->setFrom($from)
+      ->setTo($to)
+      ->setBody($body);
+  }
+
+  protected function sendMail() : bool {
+    if ( $this->message && $this->client->send($this->message) === 1 ) {
+      return true;
+    }
+
+    return false;
   }
 
 }
