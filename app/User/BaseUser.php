@@ -76,6 +76,11 @@ abstract class BaseUser {
     return $this->updateUserToken($email, $old_token, $new_token);
   }
 
+  // Password Reset
+  public function resetPassword(string $email) {
+    return $this->resetUserPassword($email);
+  }
+
   // Data
   public function getData() : array {
     if (!$this->user_id) {
@@ -259,7 +264,7 @@ abstract class BaseUser {
         $username = $old_user_data['username'];
       }
 
-      $this->unverifyUser($email, Token::get(Config::get('email/token_length')));
+      $this->unverifyUser($email, Token::get(Config::get('verification_mail/token_length')));
       $this->sendUserVerificationMail($email, $this->getToken($email), $username);
 
       return [
@@ -368,10 +373,10 @@ abstract class BaseUser {
   // Verification
   protected function sendUserVerificationMail(string $email, string $token = '', string $username = '') : bool {
     if (!$token) {
-      $token = Token::get(Config::get('email/token_length'));
+      $token = Token::get(Config::get('verification_mail/token_length'));
     }
 
-    if(!$username) {
+    if (!$username) {
       $username = $this->getUsernameByEmail($email);
 
       if (!$username) {
@@ -379,12 +384,12 @@ abstract class BaseUser {
       }
     }
 
-    $message = new Message(Config::get('email/message'), [
+    $message = new Message(Config::get('verification_mail/message'), [
       'username' => $username,
-      'url' => Config::get('email/url') . "?token={$token}&email={$email}"
+      'url' => Config::get('verification_mail/url') . "?token={$token}&email={$email}"
     ]);
 
-    $mail = new Mail(Config::get('email/from'), $email, Config::get('email/subject'), $message->getMessage());
+    $mail = new Mail(Config::get('verification_mail/from'), $email, Config::get('verification_mail/subject'), $message->getMessage());
 
     return $mail->sent();
   }
@@ -444,6 +449,50 @@ abstract class BaseUser {
     ], [
       'email' => $email
     ]);
+  }
+
+  // Password Reset
+  protected function resetUserPassword(string $email) {
+    if (!$this->userExists($email, 'email')) {
+      return [
+        'email' => [ 'This email does not exist.' ]
+      ];
+    }
+
+    $password = Token::get(Config::get('password_reset_mail/password_length'));
+
+    $password_hash = Hash::get($password);
+
+    $updated = $this->db->table($this->table)->update([
+      'password' => $password_hash
+    ], [
+      'email' => $email
+    ]);
+
+    if (!$updated) {
+      return false;
+    }
+
+    return $this->sendUserPasswordResetMail($email, $password);
+  }
+
+  protected function sendUserPasswordResetMail(string $email, string $password, string $username = '') : bool {
+    if (!$username) {
+      $username = $this->getUsernameByEmail($email);
+
+      if (!$username) {
+        return false;
+      }
+    }
+
+    $message = new Message(Config::get('password_reset_mail/message'), [
+      'username' => $username,
+      'password' => $password
+    ]);
+
+    $mail = new Mail(Config::get('password_reset_mail/from'), $email, Config::get('password_reset_mail/subject'), $message->getMessage());
+
+    return $mail->sent();
   }
 
   // General

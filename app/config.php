@@ -37,15 +37,26 @@ $GLOBALS['config'] = [
       'cost' => 12
     ]
   ],
-  'email' => [
+  'mail' => [
+    'smtp_config_file' => Env::get('SMTP_CONFIG') ?? 'storage/mail/smtp/smtp-server-credentials.json'
+  ],
+  'verification_mail' => [
     'token_length' => 32,
-    'smtp_config_file' => Env::get('SMTP_CONFIG') ?? 'storage/mail/smtp/smtp-server-credentials.json',
     'url' => Env::get('EMAIL_URL') ?? 'http://localhost:8080/GitHub/login-script/verify.php',
     'from' => 'habichvergessen40@gmail.com',
     'subject' => 'Welcome to the restricted area - Please verify your email!',
     'message' => 'Hello :username!' . PHP_EOL . PHP_EOL .
-                 'Welcome to the restricted area! You have to verify your email before you can access the restricted area.' . PHP_EOL .
+                 'Welcome to the restricted area! You have to verify your email before you can access the restricted area.' . PHP_EOL . PHP_EOL .
                  'Please click on the following link to verify your email: :url' . PHP_EOL . PHP_EOL .
+                 'Thanks!'
+  ],
+  'password_reset_mail' => [
+    'password_length' => 16,
+    'from' => 'habichvergessen40@gmail.com',
+    'subject' => 'Restricted area - Your new password',
+    'message' => 'Hello :username!' . PHP_EOL . PHP_EOL .
+                 'Here is your new password: :password' . PHP_EOL . PHP_EOL .
+                 'For security reasons, please make sure to change the password after you logged in.' . PHP_EOL . PHP_EOL .
                  'Thanks!'
   ],
   'errors' => [

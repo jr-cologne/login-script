@@ -69,6 +69,8 @@
 
       <a href="<?php echo TwitterAuth::getAuthUrl(); ?>" class="btn">Log in with Twitter</a>
 
+      <p>You have forgotten your password? <a href="reset-password.php">Request a new one here!</a></p>
+
       <p>You don't have an account yet? <a href="register.php">Register here!</a></p>
     </main>
   </div>
