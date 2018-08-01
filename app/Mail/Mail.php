@@ -17,7 +17,7 @@ class Mail {
   protected $sent = false;
 
   public function __construct(string $from, string $to, string $subject, string $message) {
-    $this->initMailClient(Config::get('email/smtp_config_file'));
+    $this->initMailClient(Config::get('mail/smtp_config_file'));
 
     $this->message = $this->getMessage(compact('from', 'to', 'subject', 'message'));
 

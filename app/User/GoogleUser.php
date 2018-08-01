@@ -71,7 +71,7 @@ class GoogleUser extends BaseUser {
     $password = Hash::get($password);
 
     if (!$google_email_verified) {
-      $token = Token::get(Config::get('email/token_length'));
+      $token = Token::get(Config::get('verification_mail/token_length'));
     }
 
     $registered = $this->createUser([

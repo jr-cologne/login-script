@@ -24,7 +24,7 @@ class Verify extends Controller {
       if (!$token || !$email) {
         Redirect::to('index.php');
       }
-      
+
       $user = $this->getUserInstance();
 
       if ($user->isVerified($email)) {
@@ -35,7 +35,7 @@ class Verify extends Controller {
       }
 
       if (Input::get('resend', 'get') == 'true') {
-        $new_token = Token::get(Config::get('email/token_length'));
+        $new_token = Token::get(Config::get('verification_mail/token_length'));
 
         if (!$user->updateToken($email, $token, $new_token)) {
           Session::put(Config::get('errors/session_name'), [

@@ -48,7 +48,7 @@ class User extends BaseUser {
 
     $password = Hash::get($password);
 
-    $token = Token::get(Config::get('email/token_length'));
+    $token = Token::get(Config::get('verification_mail/token_length'));
 
     $user_registered = $this->createUser(compact('username', 'email', 'password', 'token'));
 
