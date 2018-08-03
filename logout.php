@@ -8,32 +8,22 @@
 
   $controller = $app->controller('logout');
 
+  $controller->setPageItems([
+    'title' => 'Logout',
+    'back_link_href' => 'index.php',
+    'back_link_description' => 'Back to the homepage'
+  ]);
+
   $errors = Session::get(Config::get('errors/session_name'));
   Session::delete(Config::get('errors/session_name'));
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Restricted Area - Logout</title>
-  <meta charset="utf-8">
-  <meta name="robots" content="noindex, follow">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>Restricted Area - Logout</h1>
-      <h2>Welcome to the the restricted area!</h2>
-    </header>
+<?php require_once 'partials/header.php'; ?>
 
     <main>
-      <a href="index.php">Back to the homepage</a>
+      <?php require_once 'components/back-link.php'; ?>
 
-      <?php echo !empty($errors['failed']) ? '<div class="alert alert-danger" role="alert"><p class="mb-0">' .  $errors['failed'] . '</p></div>' : '' ?>
+      <?php echo !empty($errors['failed']) ? '<div class="alert alert-danger" role="alert"><p>' .  $errors['failed'] . '</p></div>' : '' ?>
     </main>
-  </div>
-</body>
-</html>
+
+<?php require_once 'partials/footer.php'; ?>

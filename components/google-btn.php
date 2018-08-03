@@ -1,0 +1,1 @@
+<a href="<?php echo LoginScript\Google\Auth\GoogleAuth::getAuthUrl($controller->getPageItem('auth_type')); ?>" class="btn btn-google"><i class="fab fa-google"></i> <?php echo $controller->getPageItem('google_btn_description'); ?></a>

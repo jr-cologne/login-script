@@ -1,0 +1,41 @@
+.navbar-brand a {
+  color: rgba(0,0,0,0.9);
+}
+
+.navbar-brand a:hover {
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: none;
+}
+
+p {
+  margin: 1rem auto;
+}
+
+p:first-child {
+  margin-top: 0;
+}
+
+.alert p {
+  margin-bottom: 0;
+}
+
+.btn-google {
+  background-color: #e03233;
+  color: white;
+}
+
+.btn-google:hover {
+  color: white;
+}
+
+.btn-twitter {
+  background-color: #349bec;
+  color: white;
+}
+
+.btn-twitter:hover {
+  color: white;
+}
