@@ -1,0 +1,1 @@
+<a href="<?php echo LoginScript\Twitter\Auth\TwitterAuth::getAuthUrl($controller->getPageItem('auth_type') ?? 'login'); ?>" class="btn btn-twitter"><i class="fab fa-twitter"></i> <?php echo $controller->getPageItem('twitter_btn_description'); ?></a>

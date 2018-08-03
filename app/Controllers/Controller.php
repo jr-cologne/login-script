@@ -3,6 +3,7 @@
 namespace LoginScript\Controllers;
 
 use LoginScript\{
+  Controllers\Exception\ControllerException,
   Config\Config,
   User\BaseUser,
   User\User,
@@ -17,6 +18,8 @@ abstract class Controller {
 
   protected $do_not_escape = [];
 
+  protected $page_data = null;
+
   protected $user = null;
 
   public function __construct($dependencies) {
@@ -25,6 +28,68 @@ abstract class Controller {
   }
 
   abstract public function run();
+
+  public function setPageData(array $data) : bool {
+    $this->page_data = $data;
+
+    if (!isset($this->page_data)) {
+      throw new ControllerException('Failed to set page data');
+    }
+
+    return true;
+  }
+
+  public function getPageData() : array {
+    if (!isset($this->page_data)) {
+      throw new ControllerException('Failed to retrieve page data');
+    }
+
+    return $this->page_data;
+  }
+
+  public function setPageItems(array $items) : bool {
+    foreach ($items as $key => $value) {
+      $this->page_data[$key] = $value;
+
+      if (!isset($this->page_data[$key])) {
+        throw new ControllerException('Failed to set page item');
+      }
+    }
+
+    return true;
+  }
+
+  public function getPageItems(array $keys) : array {
+    $items = [];
+
+    foreach ($keys as $key) {
+      if (!isset($this->page_data[$key])) {
+        throw new ControllerException('Failed to retrieve page item');
+      }
+
+      $items[$key] = $this->page_data[$key];
+    }
+
+    return $items;
+  }
+
+  public function setPageItem(string $key, $value) : bool {
+    $this->page_data[$key] = $value;
+
+    if (!isset($this->page_data[$key])) {
+      throw new ControllerException('Failed to set page item');
+    }
+
+    return true;
+  }
+
+  public function getPageItem(string $key) {
+    if (!isset($this->page_data[$key])) {
+      throw new ControllerException('Failed to retrieve page item');
+    }
+
+    return $this->page_data[$key];
+  }
 
   public function guest() : bool {
     return !$this->getUserInstance()->isLoggedIn();

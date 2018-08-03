@@ -8,6 +8,8 @@
 
   $controller = $app->controller('home');
 
+  $controller->setPageItem('title', 'Home');
+
   $guest = $controller->guest();
 
   if ($guest) {
@@ -21,22 +23,7 @@
   }
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Restricted Area - Home</title>
-  <meta charset="utf-8">
-  <meta name="robots" content="noindex, follow">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>Restricted Area - Home</h1>
-      <h2>Welcome to the the restricted area!</h2>
-    </header>
+<?php require_once 'partials/header.php'; ?>
 
     <main>
       <?php if (!$guest): ?>
@@ -45,24 +32,23 @@
         <p>You are logged in as:</p>
 
         <?php if (!empty($user_data['username']) && !empty($user_data['email'])): ?>
-          <div id="user_info">
-            <ul>
-              <li><?php echo $user_data['username']; ?></li>
-              <li><?php echo $user_data['email']; ?></li>
+          <div class="jumbotron">
+            <ul class="list-group mb-3">
+              <li class="list-group-item"><i class="fas fa-user"></i> <?php echo $user_data['username']; ?></li>
+              <li class="list-group-item"><i class="fas fa-at"></i> <?php echo $user_data['email']; ?></li>
             </ul>
-            
-            <a href="profile.php">Edit profile</a>
+
+            <a href="profile.php" class="btn btn-primary"><i class="fas fa-pen"></i> Edit profile</a>
           </div>
         <?php endif; ?>
 
-        <a href="logout.php">Log out</a>
+        <a href="logout.php" class="btn btn-secondary"><i class="fas fa-sign-out-alt"></i> Log out</a>
       <?php else: ?>
-        <?php echo !empty($errors['success']) ? '<div class="alert alert-success" role="alert"><p class="mb-0">' .  $errors['success'] . '</p></div>' : '' ?>
+        <?php echo !empty($errors['success']) ? '<div class="alert alert-success" role="alert"><p>' .  $errors['success'] . '</p></div>' : '' ?>
 
         <p>You want to have access to the restricted area?<p>
         <p>Then just go ahead and <a href="login.php">log in to your account</a> or <a href="register.php">register</a> if you don't already have an account!</p>
       <?php endif; ?>
     </main>
-  </div>
-</body>
-</html>
+
+<?php require_once 'partials/footer.php'; ?>

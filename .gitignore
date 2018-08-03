@@ -54,3 +54,6 @@ todo.md
 
 # Exclude storage
 storage
+
+# Exclude node_modules
+node_modules
