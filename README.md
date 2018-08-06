@@ -24,10 +24,12 @@ Now, in order to run the login-script on your local machine or your own server, 
 First of all, execute this command in your terminal or command prompt:
 
 ```
-composer create-project jr-cologne/login-script
+composer create-project jr-cologne/login-script your-project-name
 ```
 
-This is basically the same as doing a `git clone` followed by a `composer install`.
+Do not forget to change `your-project-name` to your specific name for your project folder.
+
+The command `composer create-project` is basically the same as doing a `git clone` followed by a `composer install`.
 
 This means that you are almost finished already. Executing the one command above should have downloaded the entire project and installed all Composer dependencies as well.
 
