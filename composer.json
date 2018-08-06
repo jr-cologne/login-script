@@ -1,4 +1,14 @@
 {
+  "name": "jr-cologne/login-script",
+  "type": "project",
+  "version": "2.0.0",
+  "description": "A simple object-oriented and database-based login script with PHP.",
+  "keywords": [
+    "database-based",
+    "php",
+    "oop",
+    "object-oriented"
+  ],
   "require": {
     "php": ">=7.0",
     "jr-cologne/db-class": "^2.1",
@@ -14,5 +24,20 @@
     "files": [
       "app/config.php"
     ]
+  },
+  "homepage": "https://github.com/jr-cologne/login-script",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "JR Cologne",
+      "email": "kontakt@jr-cologne.de",
+      "homepage": "https://jr-cologne.de/",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/jr-cologne/login-script/issues",
+    "source": "https://github.com/jr-cologne/login-script/tree/v2.0.0",
+    "docs": "https://github.com/jr-cologne/login-script/blob/README.md"
   }
 }
