@@ -17,11 +17,25 @@ A simple object-oriented and database-based login script with PHP.
 
 ### Using Composer (recommended)
 
-Coming soon...
+Using Composer is the quickest way to install everything. For this, make sure you have [Composer](https://getcomposer.org) installed.
+
+Now, in order to run the login-script on your local machine or your own server, follow these installation instructions:
+
+First of all, execute this command in your terminal or command prompt:
+
+```
+composer create-project jr-cologne/login-script
+```
+
+This is basically the same as doing a `git clone` followed by a `composer install`.
+
+This means that you are almost finished already. Executing the one command above should have downloaded the entire project and installed all Composer dependencies as well.
+
+Now, just continue with the [Installation of Dependencies](https://github.com/jr-cologne/login-script#installation_of_dependencies), but keep in mind that you can skip the part with Composer. Just move on to npm.
 
 ### Manual Installation
 
-In order to run the login script on your local machine or your own server, follow these installation instructions:
+In order to run the login-script on your local machine or your own server, follow these installation instructions:
 
 1. Download one of the archive files from the latest (stable) release of this project, either *zip* or *tar.gz*.
 2. Unpack the archive of your choice and put the files into a folder where you project should be located.
