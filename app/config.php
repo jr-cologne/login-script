@@ -43,7 +43,7 @@ $GLOBALS['config'] = [
   'verification_mail' => [
     'token_length' => 32,
     'url' => Env::get('EMAIL_URL') ?? 'http://localhost:8080/GitHub/login-script/verify.php',
-    'from' => 'habichvergessen40@gmail.com',
+    'from' => 'kontakt@jr-cologne.de',
     'subject' => 'Welcome to the restricted area - Please verify your email!',
     'message' => 'Hello :username!' . PHP_EOL . PHP_EOL .
                  'Welcome to the restricted area! You have to verify your email before you can access the restricted area.' . PHP_EOL . PHP_EOL .
@@ -52,7 +52,7 @@ $GLOBALS['config'] = [
   ],
   'password_reset_mail' => [
     'password_length' => 16,
-    'from' => 'habichvergessen40@gmail.com',
+    'from' => 'kontakt@jr-cologne.de',
     'subject' => 'Restricted area - Your new password',
     'message' => 'Hello :username!' . PHP_EOL . PHP_EOL .
                  'Here is your new password: :password' . PHP_EOL . PHP_EOL .
