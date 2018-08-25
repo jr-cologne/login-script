@@ -65,6 +65,14 @@ Then, go ahead and run the following command:
 npm install
 ```
 
+### Manual Installation
+
+The second option to install all dependencies is just doing it manually.
+
+For this, download all dependencies from their repositories linked above and organize them into some kind of "vendor" folder.
+
+Then, open up the file `app/init.php` and replace the line regarding the Composer autoloader with the various includes for all dependencies.
+
 ## Getting Started
 
 Before following this short Getting Started Guide, please ensure that you have successfully installed everything outlined in the above Installation Guide.
