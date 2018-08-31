@@ -57,3 +57,6 @@ storage
 
 # Exclude node_modules
 node_modules
+
+# Exclude .env file
+.env

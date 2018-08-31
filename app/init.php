@@ -4,10 +4,15 @@ require_once 'vendor/autoload.php';
 
 use LoginScript\{
   Core\App as LoginScript,
+  Env\Env,
   ErrorHandling\ErrorHandler
 };
 
 use JRCologne\Utils\Database\{ DB, QueryBuilder };
+
+Env::loadEnvVars();
+
+require_once 'config.php';
 
 // init error handling
 $error_handler = new ErrorHandler;
