@@ -2,19 +2,13 @@
 
 use LoginScript\Env\Env;
 
-$db_url = Env::get('CLEARDB_DATABASE_URL');
-
-if ($db_url) {
-  $db_url = parse_url($db_url);
-}
-
 $GLOBALS['config'] = [
   'database' => [
-    'type' => 'mysql',
-    'name' => substr($db_url['path'], 1) ?: 'login-script',
-    'host' => $db_url['host'] ?? '127.0.0.1',
-    'user' => $db_url['user'] ?? 'root',
-    'password' => $db_url['pass'] ?? 'root',
+    'type' => Env::get('DATABASE_TYPE') ?? 'mysql',
+    'name' => Env::get('DATABASE_NAME') ?? 'login-script',
+    'host' => Env::get('DATABASE_HOST') ?? '127.0.0.1',
+    'user' => Env::get('DATABASE_USER'),
+    'password' => Env::get('DATABASE_PASSWORD'),
     'table' => 'users'
   ],
   'csrf' => [
@@ -34,16 +28,16 @@ $GLOBALS['config'] = [
     'algorithm' => 'password_bcrypt',
     'options' => [
       'pepper' => Env::get('PEPPER') ?? 'S3Aze&H!qa8heXEka+UP',
-      'cost' => 12
+      'cost' => Env::get('COST') ?? 10
     ]
   ],
   'mail' => [
-    'smtp_config_file' => Env::get('SMTP_CONFIG') ?? 'storage/mail/smtp/smtp-server-credentials.json'
+    'smtp_config_file' => Env::get('SMTP_CONFIG') ?? Env::get('SMTP_CONFIG_FILE')
   ],
   'verification_mail' => [
     'token_length' => 32,
-    'url' => Env::get('EMAIL_URL') ?? 'http://localhost:8080/GitHub/login-script/verify.php',
-    'from' => 'kontakt@jr-cologne.de',
+    'url' => Env::get('EMAIL_URL'),
+    'from' => Env::get('EMAIL_FROM'),
     'subject' => 'Welcome to the restricted area - Please verify your email!',
     'message' => 'Hello :username!' . PHP_EOL . PHP_EOL .
                  'Welcome to the restricted area! You have to verify your email before you can access the restricted area.' . PHP_EOL . PHP_EOL .
@@ -52,7 +46,7 @@ $GLOBALS['config'] = [
   ],
   'password_reset_mail' => [
     'password_length' => 16,
-    'from' => 'kontakt@jr-cologne.de',
+    'from' => Env::get('EMAIL_FROM'),
     'subject' => 'Restricted area - Your new password',
     'message' => 'Hello :username!' . PHP_EOL . PHP_EOL .
                  'Here is your new password: :password' . PHP_EOL . PHP_EOL .
@@ -67,11 +61,11 @@ $GLOBALS['config'] = [
   ],
   'social_auth' => [
     'google' => [
-      'config_file' => json_decode(Env::get('GOOGLE_CONFIG'), true) ?? 'storage/social_auth/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json',
+      'config_file' => json_decode(Env::get('GOOGLE_CONFIG'), true) ?? Env::get('GOOGLE_CONFIG_FILE'),
       'scopes' => 'email',
       'redirect_uri' => [
-        'login' => Env::get('GOOGLE_REDIRECT_URI_LOGIN') ?? 'http://localhost:8080/GitHub/login-script/google_login.php',
-        'register' => Env::get('GOOGLE_REDIRECT_URI_REGISTER') ?? 'http://localhost:8080/GitHub/login-script/google_register.php'
+        'login' => Env::get('GOOGLE_REDIRECT_URI_LOGIN'),
+        'register' => Env::get('GOOGLE_REDIRECT_URI_REGISTER')
       ],
       'registration' => [
         'username_length' => 8,
@@ -79,10 +73,10 @@ $GLOBALS['config'] = [
       ]
     ],
     'twitter' => [
-      'config_file' => Env::get('TWITTER_CONFIG') ?? 'storage/social_auth/twitter/twitter-api-credentials.json',
+      'config_file' => Env::get('TWITTER_CONFIG') ?? Env::get('TWITTER_CONFIG_FILE'),
       'redirect_uri' => [
-        'login' => Env::get('TWITTER_REDIRECT_URI_LOGIN') ?? 'http://localhost:8080/GitHub/login-script/twitter_login.php',
-        'register' => Env::get('TWITTER_REDIRECT_URI_REGISTER') ?? 'http://localhost:8080/GitHub/login-script/twitter_register.php'
+        'login' => Env::get('TWITTER_REDIRECT_URI_LOGIN'),
+        'register' => Env::get('TWITTER_REDIRECT_URI_REGISTER')
       ],
       'registration' => [
         'username_length' => 8,
@@ -92,7 +86,7 @@ $GLOBALS['config'] = [
   ],
   'error_handling' => [
     'bugsnag' => [
-      'config_file' => Env::get('BUGSNAG_CONFIG') ?? 'storage/error_handling/bugsnag/bugsnag-api-credentials.json',
+      'config_file' => Env::get('BUGSNAG_CONFIG') ?? Env::get('BUGSNAG_CONFIG_FILE'),
     ]
   ],
   'dependencies' => [
