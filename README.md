@@ -92,32 +92,16 @@ If you take a look in the `database` folder, you can see that the login-script p
 
 After you have successfully set up the database, you only need to establish your database connection.
 
-For this, open the file `config.php` which is located in the `app` folder.
+For this, copy the file `.env.example` and rename it to `.env`.
 
-For now, you just need to worry about changing the values inside the array with the key `database`:
+For now, you just need to worry about changing the following settings inside the environment variables file:
 
-```php
-'database' => [
-    'type' => 'mysql',
-    'name' => substr($db_url['path'], 1) ?: 'login-script',
-    'host' => $db_url['host'] ?? '127.0.0.1',
-    'user' => $db_url['user'] ?? 'root',
-    'password' => $db_url['pass'] ?? 'root',
-    'table' => 'users'
-]
 ```
-
-After your modifications, your array might look like this for example:
-
-```php
-'database' => [
-    'type' => 'mysql',
-    'name' => 'login-script',
-    'host' => '127.0.0.1',
-    'user' => 'root',
-    'password' => 'password',
-    'table' => 'users'
-]
+DATABASE_TYPE=mysql
+DATABASE_NAME=login-script
+DATABASE_HOST=127.0.0.1
+DATABASE_USER=user
+DATABASE_PASSWORD=password
 ```
 
 That's it. Your database should now be ready to go.
@@ -159,26 +143,12 @@ Now, just copy that API key. In case you are not working with environment variab
 
 So, just paste your API key from Bugsnag in there and then save your JSON file to some directory which is ignored by git since you don't want your API keys to be publically available on GitHub or something like that.
 
-Finally, to make sure the login-script knows where it can find your file, you need to specify the file path inside `app/config.php`.
+Finally, to make sure the login-script knows where it can find your file, you need to specify the file path inside `.env`.
 
-Inside the file `config.php`, look for something looking like this and modify it for your own needs:
+Inside the file `.env`, look for something looking like this and modify it for your own needs:
 
-```php
-'error_handling' => [
-  'bugsnag' => [
-    'config_file' => Env::get('BUGSNAG_CONFIG') ?? 'storage/error_handling/bugsnag/bugsnag-api-credentials.json',
-  ]
-]
 ```
-
-For instance, your own config could look like the following:
-
-```php
-'error_handling' => [
-  'bugsnag' => [
-    'config_file' => 'storage/error_handling/bugsnag/bugsnag-api-credentials.json',
-  ]
-]
+BUGSNAG_CONFIG_FILE=storage/error_handling/bugsnag/bugsnag-api-credentials.json
 ```
 
 That's all. You should now be ready for handling your errors with Bugsnag.
@@ -204,43 +174,15 @@ http://localhost/google_register.php
 
 Very important is that the filenames stay the same. The rest can be adapted.
 
-Next, download the client configuration of your created project. This is a JSON file which can be used for the login-script to define your credentials for the Google API. For this, again just use a directory which is ignored by git and make sure you put the file path inside the config file of the login-script. By default, the section of interest inside the file `config.php` looks like this:
+Next, download the client configuration of your created project. This is a JSON file which can be used for the login-script to define your credentials for the Google API. For this, again just use a directory which is ignored by git and make sure you put the file path inside the `.env` file of the login-script. This is the setting you need to change:
 
-```php
-'social_auth' => [
-  'google' => [
-    'config_file' => json_decode(Env::get('GOOGLE_CONFIG'), true) ?? 'storage/social_auth/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json',
-    'scopes' => 'email',
-    'redirect_uri' => [
-      'login' => Env::get('GOOGLE_REDIRECT_URI_LOGIN') ?? 'http://localhost:8080/GitHub/login-script/google_login.php',
-      'register' => Env::get('GOOGLE_REDIRECT_URI_REGISTER') ?? 'http://localhost:8080/GitHub/login-script/google_register.php'
-    ],
-    'registration' => [
-      'username_length' => 8,
-      'password_length' => 16
-    ]
-  ],
+```
+GOOGLE_CONFIG_FILE=storage/social_auth/google/xxx.apps.googleusercontent.com.json
+GOOGLE_REDIRECT_URI_LOGIN=http://example.com/google_login.php
+GOOGLE_REDIRECT_URI_REGISTER=http://example.com/google_register.php
 ```
 
-The path to your Google client configuration file needs to be specified at `config_file`. In addition, go ahead and change the redirect URIs as well. The rest can stay the same.
-
-Here's a final example of how your configuration could look like after you entered everything mentioned above:
-
-```php
-'social_auth' => [
-  'google' => [
-    'config_file' => 'storage/social_auth/google/client_secret_374519720876-f0vvtnsi6prh6oepehtj9e2vgif8u2fd.apps.googleusercontent.com.json',
-    'scopes' => 'email',
-    'redirect_uri' => [
-      'login' => 'http://localhost/google_login.php',
-      'register' => 'http://localhost/google_register.php'
-    ],
-    'registration' => [
-      'username_length' => 8,
-      'password_length' => 16
-    ]
-  ],
-```
+The path to your Google client configuration file needs to be specified at `GOOGLE_CONFIG_FILE`. In addition, go ahead and change the redirect URIs as well. The rest can stay the same.
 
 That's it. You can now move on to Twitter.
 
@@ -283,37 +225,15 @@ Here is the required format:
 }
 ```
 
-Save this file including your credentials inside a folder which is ignored by git and specify the file path inside the file `app/config.php`. You can find the needed part directly under the Google configurations inside the array with the key `social_auth`:
+Save this file including your credentials inside a folder which is ignored by git and specify the file path inside the file `.env`.
 
-```php
-'twitter' => [
-  'config_file' => Env::get('TWITTER_CONFIG') ?? 'storage/social_auth/twitter/twitter-api-credentials.json',
-  'redirect_uri' => [
-    'login' => Env::get('TWITTER_REDIRECT_URI_LOGIN') ?? 'http://localhost:8080/GitHub/login-script/twitter_login.php',
-    'register' => Env::get('TWITTER_REDIRECT_URI_REGISTER') ?? 'http://localhost:8080/GitHub/login-script/twitter_register.php'
-  ],
-  'registration' => [
-    'username_length' => 8,
-    'password_length' => 16
-  ]
-]
+```
+TWITTER_CONFIG_FILE=storage/social_auth/twitter/twitter-api-credentials.json
+TWITTER_REDIRECT_URI_LOGIN=http://example.com/twitter_login.php
+TWITTER_REDIRECT_URI_REGISTER=http://example.com/twitter_register.php
 ```
 
-Like with Google, you need to change the `config_file` options as well as the Redirect URIs. This is how it could look like:
-
-```php
-'twitter' => [
-  'config_file' => 'storage/social_auth/twitter/twitter-api-credentials.json',
-  'redirect_uri' => [
-    'login' => 'http://localhost/twitter_login.php',
-    'register' => 'http://localhost/twitter_register.php'
-  ],
-  'registration' => [
-    'username_length' => 8,
-    'password_length' => 16
-  ]
-]
-```
+Like with Google, you need to change the `TWITTER_CONFIG_FILE` option as well as the Redirect URIs.
 
 That's all. You should now have access to the Twitter API.
 
@@ -335,23 +255,15 @@ Once you have the credentials to some kind of SMTP server, go ahead and create a
 }
 ```
 
-After entering your credentials, save the JSON file and then open up the login-script config file over at `app/config.php`.
+After entering your credentials, save the JSON file and then open up the `.env` file of the login-script.
 
 Now, search for this entry:
 
-```php
-'mail' => [
-  'smtp_config_file' => Env::get('SMTP_CONFIG') ?? 'storage/mail/smtp/smtp-server-credentials.json'
-],
+```
+SMTP_CONFIG_FILE=storage/mail/smtp/smtp-server-credentials.json
 ```
 
-Everything you need to specify is the file path to your file containing the SMTP server credentials. Finally, this could look like that:
-
-```php
-'mail' => [
-  'smtp_config_file' => 'storage/mail/smtp/smtp-server-credentials.json'
-],
-```
+Everything you need to specify is the file path to your file containing the SMTP server credentials.
 
 After doing all of this, everything should be ready to go. Go ahead, deploy your application and have fun!
 If you want to, you can, of course, customize the login-script according to your own needs.
