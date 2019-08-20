@@ -16,6 +16,6 @@
   },
   "homepage": "https://github.com/jr-cologne/login-script#readme",
   "dependencies": {
-    "bootstrap": "^4.1.3"
+    "bootstrap": "^4.3.1"
   }
 }
